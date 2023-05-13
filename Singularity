@@ -7,7 +7,7 @@ FROM: nvcr.io/nvidia/modulus/modulus:22.09
 
 %environment
 %post
-    pip3 install gdown
+    pip3 install gdown cdsapi
     pip3 install wandb ruamel.yaml netCDF4 mpi4py
     pip3 install --upgrade nbconvert
     python3 /workspace/python/source_code/dataset.py    

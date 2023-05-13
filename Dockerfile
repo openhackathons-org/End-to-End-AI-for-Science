@@ -8,7 +8,7 @@
 FROM nvcr.io/nvidia/modulus/modulus:22.09
 
 # Install required python packages
-RUN pip3 install gdown ipympl
+RUN pip3 install gdown ipympl cdsapi
 RUN pip3 install wandb ruamel.yaml netCDF4 mpi4py 
 RUN pip3 install --upgrade nbconvert
 

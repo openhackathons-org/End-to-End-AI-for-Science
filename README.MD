@@ -1,22 +1,23 @@
 # End to End AI for Science
 
-This repository contains materials for End to End AI for Science bootcamp. The objective of this lab is to give an introduction to application of Artificial Intelligence (AI) algorithms in Science ( High Performance Computing (HPC) Simulations ). This Bootcamp will provide introduction to fundamentals of using Physics Informed Neural Network and how they can be applied to real world scientific domains using NVIDIA Modulus and uses NVIDIA Omniverse for visualisation.
+This repository contains materials for End to End AI for Science bootcamp. The objective of this lab is to give an introduction to application of Artificial Intelligence (AI) algorithms in Science ( High Performance Computing (HPC) Simulations ). This Bootcamp will provide introduction to fundamentals of using Physics Informed Neural Network and how they can be applied to real world scientific domains using NVIDIA Modulus and uses NVIDIA Omniverse™ for visualisation.
 
 ## Target Audience:
 
-The target audience for this bootcamp are researchers/graduate students and developers who are new to field of Artifical Intelligence and interested in learning difference between Data and Physics Informed Neural Network approach applied to Simulation domains. Basic Python programming knowledge is required. 
+The target audience for this bootcamp are researchers/graduate students and developers who are new to field of Artifical Intelligence and interested in learning difference between Data and Physics Informed Neural Network approach applied to Simulation and visulaisation domains. Basic Python programming knowledge is required. 
 
 ## Tutorial Duration
 
 The overall bootcamp will take approximately 12 hours. 
 
 ## Prerequisites
-To run this tutorial you will need a machine with NVIDIA GPU.
+To run this tutorial you will need a machine with NVIDIA GPU, a RTX enabled GPU is necessary for working with the NVIDIA Omniverse™.
 
 - Install the latest [Docker](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker) or [Singularity](https://sylabs.io/docs/).
 
 - The base containers required for the lab may require users to create a NGC account and generate an API key (https://docs.nvidia.com/ngc/ngc-catalog-user-guide/index.html#registering-activating-ngc-account)
 
+The material is also tested to be working with NVIDIA A100 and A800 GPUs, kindly contact us if you are looking for instructions to deploy it in A100/A800 environment. 
 ## Creating containers
 To start with, you will have to build a Docker or Singularity container.
 
