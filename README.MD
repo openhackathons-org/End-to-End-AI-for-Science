@@ -2,6 +2,8 @@
 
 This repository contains materials for End to End AI for Science bootcamp. The objective of this lab is to give an introduction to application of Artificial Intelligence (AI) algorithms in Science ( High Performance Computing (HPC) Simulations ). This Bootcamp will provide introduction to fundamentals of using Physics Informed Neural Network and how they can be applied to real world scientific domains using NVIDIA Modulus and uses NVIDIA Omniverse™ for visualisation.
 
+![FourCastNet on Omniverse](https://github.com/openhackathons-org/End-to-End-AI-for-Science/blob/d403086ce59c49b26be430bbea0056c37bd4d5f6/workspace/python/jupyter_notebook/omniverse/images/tcwv.gif)
+
 ## Target Audience:
 
 The target audience for this bootcamp are researchers/graduate students and developers who are new to field of Artifical Intelligence and interested in learning difference between Data and Physics Informed Neural Network approach applied to Simulation and visulaisation domains. Basic Python programming knowledge is required. 
