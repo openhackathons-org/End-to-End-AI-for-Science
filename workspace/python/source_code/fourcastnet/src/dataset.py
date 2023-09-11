@@ -26,8 +26,8 @@ import numpy as np
 from typing import List
 from pathlib import Path
 
-from modulus.hydra import to_absolute_path
-from modulus.dataset import Dataset
+from modulus.sym.hydra import to_absolute_path
+from modulus.sym.dataset import Dataset
 
 
 class ERA5HDF5GridDataset(Dataset):

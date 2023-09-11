@@ -27,8 +27,8 @@ custom:
   training_data_path: "/workspace/python/source_code/fourcastnet/data/train" # Training dataset path here
   test_data_path:     "/workspace/python/source_code/fourcastnet/data/test" # Test dataset path here
   num_workers:
-    grid: 1
-    validation: 1
+    grid: 4
+    validation: 4
   tag:
 
 batch_size:

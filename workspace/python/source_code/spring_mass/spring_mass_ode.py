@@ -20,7 +20,7 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 from sympy import Symbol, Function, Number
-from modulus.eq.pde import PDE
+from modulus.sym.eq.pde import PDE
 
 
 class SpringMass(PDE):

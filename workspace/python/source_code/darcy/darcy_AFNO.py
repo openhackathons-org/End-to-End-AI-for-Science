@@ -20,22 +20,22 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import modulus
-from modulus.hydra import instantiate_arch
-from modulus.hydra.config import ModulusConfig
-from modulus.key import Key
+from modulus.sym.hydra import instantiate_arch
+from modulus.sym.hydra.config import ModulusConfig
+from modulus.sym.key import Key
 
-from modulus.domain import Domain
-from modulus.domain.constraint import SupervisedGridConstraint
-from modulus.domain.validator import GridValidator
-from modulus.dataset import DictGridDataset
-from modulus.solver import Solver
+from modulus.sym.domain import Domain
+from modulus.sym.domain.constraint import SupervisedGridConstraint
+from modulus.sym.domain.validator import GridValidator
+from modulus.sym.dataset import DictGridDataset
+from modulus.sym.solver import Solver
 
-from modulus.utils.io.plotter import GridValidatorPlotter
+from modulus.sym.utils.io.plotter import GridValidatorPlotter
 
 from utilities import download_FNO_dataset, load_FNO_dataset
 
 
-@modulus.main(config_path="conf", config_name="config_AFNO")
+@modulus.sym.main(config_path="conf", config_name="config_AFNO")
 def run(cfg: ModulusConfig) -> None:
 
     # load training/ test data

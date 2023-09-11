@@ -5,11 +5,11 @@
 # Finally, open http://127.0.0.1:8888/
 
 # Select Base Image 
-FROM nvcr.io/nvidia/modulus/modulus:22.09
+FROM nvcr.io/nvidia/modulus/modulus:23.08
 
 # Install required python packages
 RUN pip3 install gdown ipympl cdsapi
-RUN pip3 install wandb ruamel.yaml netCDF4 mpi4py 
+RUN pip3 install wandb ruamel.yaml netCDF4 mpi4py cdsapi
 RUN pip3 install --upgrade nbconvert
 
 # TO COPY the data 
@@ -27,7 +27,7 @@ RUN rm -rf /workspace/python/source_code/fourcastnet/pre_data
 ###### Install Omniverse 
 # Install dependencies
 RUN apt update
-RUN apt install -y gdb unzip libatomic1 ca-certificates libglu1-mesa libsm6 libegl1 libgomp1 python3 gcc g++ make binutils libxrandr-dev ttf-ubuntu-font-family
+RUN apt install -y gdb unzip libatomic1 ca-certificates libglu1-mesa libsm6 libegl1 libgomp1 python3 gcc g++ make binutils libxrandr-dev
 RUN apt install -y libnvidia-gl-525
 RUN apt install -y ffmpeg
 

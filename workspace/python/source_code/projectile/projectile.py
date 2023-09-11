@@ -23,28 +23,28 @@ import numpy as np
 from sympy import Symbol, sin, cos, pi,  Eq
 import torch
 import modulus
-from modulus.hydra import instantiate_arch, ModulusConfig
-from modulus.solver import Solver
-from modulus.domain import Domain
-from modulus.geometry.primitives_1d import Line1D,Point1D
-from modulus.geometry.primitives_2d import Rectangle
-from modulus.domain.constraint import (
+from modulus.sym.hydra import instantiate_arch, ModulusConfig
+from modulus.sym.solver import Solver
+from modulus.sym.domain import Domain
+from modulus.sym.geometry.primitives_1d import Line1D,Point1D
+from modulus.sym.geometry.primitives_2d import Rectangle
+from modulus.sym.domain.constraint import (
         PointwiseBoundaryConstraint,
         PointwiseInteriorConstraint,
 )
-from modulus.domain.inferencer import PointwiseInferencer
-from modulus.domain.validator import PointwiseValidator
-from modulus.key import Key
-from modulus.node import Node
+from modulus.sym.domain.inferencer import PointwiseInferencer
+from modulus.sym.domain.validator import PointwiseValidator
+from modulus.sym.key import Key
+from modulus.sym.node import Node
 from projectile_eqn import ProjectileEquation
-from modulus.utils.io import (
+from modulus.sym.utils.io import (
     csv_to_dict,
     ValidatorPlotter,
     InferencerPlotter,
 )
 
 
-@modulus.main(config_path="conf", config_name="config")
+@modulus.sym.main(config_path="conf", config_name="config")
 def run(cfg: ModulusConfig) -> None:
     #Creating Nodes and Domain
     pe = ProjectileEquation()
