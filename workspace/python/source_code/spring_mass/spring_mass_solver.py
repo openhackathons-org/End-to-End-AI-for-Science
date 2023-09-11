@@ -23,23 +23,23 @@ import numpy as np
 from sympy import Symbol, Eq
 
 import modulus
-from modulus.hydra import ModulusConfig, instantiate_arch
-from modulus.solver import Solver
-from modulus.domain import Domain
-from modulus.geometry.primitives_1d import Point1D
-from modulus.geometry import Parameterization
-from modulus.domain.constraint import (
+from modulus.sym.hydra import ModulusConfig, instantiate_arch
+from modulus.sym.solver import Solver
+from modulus.sym.domain import Domain
+from modulus.sym.geometry.primitives_1d import Point1D
+from modulus.sym.geometry import Parameterization
+from modulus.sym.domain.constraint import (
     PointwiseBoundaryConstraint,
     PointwiseBoundaryConstraint,
 )
-from modulus.domain.validator import PointwiseValidator
-from modulus.key import Key
-from modulus.node import Node
+from modulus.sym.domain.validator import PointwiseValidator
+from modulus.sym.key import Key
+from modulus.sym.node import Node
 
 from spring_mass_ode import SpringMass
 
 
-@modulus.main(config_path="conf", config_name="config")
+@modulus.sym.main(config_path="conf", config_name="config")
 def run(cfg: ModulusConfig) -> None:
     # make list of nodes to unroll graph on
     sm = SpringMass(k=(2, 1, 1, 2), m=(1, 1, 1))

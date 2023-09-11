@@ -26,9 +26,9 @@ import logging
 import numpy as np
 from torch.utils.data import DataLoader, Sampler
 
-from modulus.hydra import to_absolute_path
-from modulus.key import Key
-from modulus.distributed.manager import DistributedManager
+from modulus.sym.hydra import to_absolute_path
+from modulus.sym.key import Key
+from modulus.sym.distributed.manager import DistributedManager
 
 from src.dataset import ERA5HDF5GridDataset
 from src.fourcastnet import FourcastNetArch

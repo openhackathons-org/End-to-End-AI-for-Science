@@ -24,20 +24,20 @@ import os
 from sympy import Symbol, Eq, Abs, sin, cos
 
 import modulus
-from modulus.hydra import to_absolute_path, instantiate_arch, ModulusConfig
-from modulus.eq.pdes.navier_stokes import NavierStokes
-from modulus.geometry.primitives_2d import Rectangle as rect
-from modulus.models.fully_connected import FullyConnectedArch
-from modulus.key import Key
-from modulus.node import Node
-from modulus.solver import Solver
-from modulus.domain import Domain
-from modulus.domain.constraint import (
+from modulus.sym.hydra import to_absolute_path, instantiate_arch, ModulusConfig
+from modulus.sym.eq.pdes.navier_stokes import NavierStokes
+from modulus.sym.geometry.primitives_2d import Rectangle as rect
+from modulus.sym.models.fully_connected import FullyConnectedArch
+from modulus.sym.key import Key
+from modulus.sym.node import Node
+from modulus.sym.solver import Solver
+from modulus.sym.domain import Domain
+from modulus.sym.domain.constraint import (
     PointwiseConstraint,
     PointwiseInteriorConstraint,
 )
-from modulus.domain.inferencer import PointVTKInferencer
-from modulus.utils.io import (
+from modulus.sym.domain.inferencer import PointVTKInferencer
+from modulus.sym.utils.io import (
     VTKUniformGrid,
 )
 
@@ -64,7 +64,7 @@ def read_wf_data(velocity_scale,pressure_scale):
     return invar, outvar
 
 
-@modulus.main(config_path="conf", config_name="config")
+@modulus.sym.main(config_path="conf", config_name="config")
 def run(cfg: ModulusConfig) -> None:
     
     # define sympy variables to parametrize domain curves

@@ -25,9 +25,9 @@ import torch
 from torch import Tensor
 from typing import List, Tuple, Dict
 
-from modulus.models.afno.afno import AFNONet
-from modulus.models.arch import Arch
-from modulus.key import Key
+from modulus.sym.models.afno.afno import AFNONet
+from modulus.sym.models.arch import Arch
+from modulus.sym.key import Key
 
 
 class FourcastNetArch(Arch):

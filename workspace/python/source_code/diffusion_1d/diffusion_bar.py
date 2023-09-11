@@ -24,21 +24,21 @@ import numpy as np
 from sympy import Symbol, Eq, Function, Number
 
 import modulus
-from modulus.hydra import instantiate_arch , ModulusConfig
-from modulus.solver import Solver
-from modulus.domain import Domain
-from modulus.geometry.primitives_1d import Line1D
-from modulus.domain.constraint import (
+from modulus.sym.hydra import instantiate_arch , ModulusConfig
+from modulus.sym.solver import Solver
+from modulus.sym.domain import Domain
+from modulus.sym.geometry.primitives_1d import Line1D
+from modulus.sym.domain.constraint import (
     PointwiseBoundaryConstraint,
     PointwiseInteriorConstraint,
 )
 
-from modulus.domain.validator import PointwiseValidator
-from modulus.domain.monitor import PointwiseMonitor
-from modulus.key import Key
-from modulus.node import Node
+from modulus.sym.domain.validator import PointwiseValidator
+from modulus.sym.domain.monitor import PointwiseMonitor
+from modulus.sym.key import Key
+from modulus.sym.node import Node
 
-from modulus.eq.pde import PDE
+from modulus.sym.eq.pde import PDE
 
 
 # params for domain
@@ -170,7 +170,7 @@ class DiffusionInterface(PDE):
         )
 
 
-@modulus.main(config_path="conf", config_name="config")
+@modulus.sym.main(config_path="conf", config_name="config")
 def run(cfg: ModulusConfig) -> None:
 
     # make list of nodes to unroll graph on

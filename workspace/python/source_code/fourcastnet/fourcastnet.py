@@ -23,20 +23,20 @@
 
 import modulus
 
-from modulus.hydra.config import ModulusConfig
-from modulus.key import Key
-from modulus.domain import Domain
-from modulus.domain.constraint import SupervisedGridConstraint
-from modulus.domain.validator import GridValidator
-from modulus.solver import Solver
-from modulus.utils.io import GridValidatorPlotter
+from modulus.sym.hydra.config import ModulusConfig
+from modulus.sym.key import Key
+from modulus.sym.domain import Domain
+from modulus.sym.domain.constraint import SupervisedGridConstraint
+from modulus.sym.domain.validator import GridValidator
+from modulus.sym.solver import Solver
+from modulus.sym.utils.io import GridValidatorPlotter
 
 from src.dataset import ERA5HDF5GridDataset
 from src.fourcastnet import FourcastNetArch
 from src.loss import LpLoss
 
 
-@modulus.main(config_path="conf", config_name="config_FCN")
+@modulus.sym.main(config_path="conf", config_name="config_FCN")
 def run(cfg: ModulusConfig) -> None:
 
     # load training/ test data
