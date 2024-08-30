@@ -1,6 +1,6 @@
 # End-to-End AI for Science Deployment Guide 
 
-The End-to-End AI for Science Bootcamp provides a step-by-step overview of the fundamentals of deep neural networks, walks attendees through the hands-on experience of building and improving deep learning models using a framework that uses the fundamental laws of physics to model the behavior of complex systems, and enables attendees to visualize the physically accurate outputs of the trained model in near real-time.
+This Bootcamp will provide researchers hands-on approaches on how to use NVIDIA Modulus, a framework that combines physics and partial differential equations (PDEs) with artificial intelligence (AI) to build robust models. Participants will also learn about the differences between Physics-driven and Data-driven approaches to AI. In addition, the Bootcamp will provide hands-on experience with visualizing the results of physics simulations using ParaView. This Lab will also introduce you to Earth2Studio where you get to try out different workflows for various Weather forecasting models!
 
 <p align="center">
   <img width="600" height="400" src="https://github.com/openhackathons-org/End-to-End-AI-for-Science/blob/d403086ce59c49b26be430bbea0056c37bd4d5f6/workspace/python/jupyter_notebook/omniverse/images/tcwv.gif">
@@ -9,13 +9,13 @@ The End-to-End AI for Science Bootcamp provides a step-by-step overview of the f
 ## Deploying the materials
 
 ### Prerequisites
-To run this tutorial you will need a machine with NVIDIA GPU, a RTX enabled GPU is necessary for working with the NVIDIA Omniverse™.
+To run this tutorial you will need a machine with NVIDIA GPU with atleast 20GB of GPU memory for training large models as part of this Bootcamp.
 
 - Install the latest [Docker](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker) or [Singularity](https://sylabs.io/docs/).
 
 - The base containers required for the lab may require users to create a NGC account and generate an API key (https://docs.nvidia.com/ngc/ngc-catalog-user-guide/index.html#registering-activating-ngc-account)
 
-The material is also tested to be working with NVIDIA A100 and A800 GPUs, kindly contact us if you are looking for instructions to deploy it in A100/A800 environment.
+- Internet is needed during Container building and runtime to download and setup the required files.
 
 ### Tested environment
 
@@ -34,7 +34,7 @@ For instance:
 `sudo docker build -t openhackathons:ai-for-science .`
 
 and to run the container, run:
-`sudo docker run --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 -p 8011:8011  -p 8888:8888 -p 8899:8899 -v ${PWD}/workspace/python/source_code/extension:/workspace/python/source_code/extension -it --rm openhackathons:ai-for-science`
+`sudo docker run --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864  -p 8888:8888 -p 8889:8889 -it --rm openhackathons:ai-for-science`
 
 The container launches jupyter lab and runs on port 8888
 `jupyter-lab --ip 0.0.0.0 --port 8888 --no-browser --allow-root`
@@ -48,7 +48,7 @@ To build the singularity container, run:
 `singularity build --fakeroot --sandbox End-to-End-AI-for-Science.sif Singularity`
 
 Then, run the container:
-`singularity run --writable --nv End-to-End-AI-for-Science.simg jupyter-lab --no-browser --allow-root --ip=0.0.0.0 --port=8888 --NotebookApp.token="" --notebook-dir=/workspace/python`
+`singularity run --writable --nv End-to-End-AI-for-Science.sif jupyter-lab --no-browser --allow-root --ip=0.0.0.0 --port=8888 --NotebookApp.token="" --notebook-dir=/workspace/python`
 
 Then, open the jupyter lab in browser: http://localhost:8888
 Start working on the lab by clicking on the `Start_Here.ipynb` notebook.

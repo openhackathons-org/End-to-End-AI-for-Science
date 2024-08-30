@@ -1,6 +1,6 @@
 # End-to-End AI for Science
 
-The End-to-End AI for Science Bootcamp provides a step-by-step overview of the fundamentals of deep neural networks, walks attendees through the hands-on experience of building and improving deep learning models using a framework that uses the fundamental laws of physics to model the behavior of complex systems, and enables attendees to visualize the physically accurate outputs of the trained model in near real-time.
+This Bootcamp will provide researchers hands-on approaches on how to use NVIDIA Modulus, a framework that combines physics and partial differential equations (PDEs) with artificial intelligence (AI) to build robust models. Participants will also learn about the differences between Physics-driven and Data-driven approaches to AI. In addition, the Bootcamp will provide hands-on experience with visualizing the results of physics simulations using ParaView. This Lab will also introduce you to Earth2Studio where you get to try out different workflows for various Weather forecasting models!
 
 <p align="center">
   <img width="600" height="400" src="https://github.com/openhackathons-org/End-to-End-AI-for-Science/blob/d403086ce59c49b26be430bbea0056c37bd4d5f6/workspace/python/jupyter_notebook/omniverse/images/tcwv.gif">
@@ -21,16 +21,17 @@ The content is structured in multiple modules covering the following:
   - Lab 1: Solving the Darcy-Flow problem using FNO
   - Lab 2: Solving the Darcy-Flow problem using AFNO
   - Lab 3: Forecasting weather using FourCastNet
-- Module 3: Visualising Scientific data
-  - Lab 1: Introduction to NVIDIA Omniverse
-  - Lab 2: Physics-Informed data visualization using Omniverse extensions
-  - Lab 3: FourCastNet data visualization using Omniverse extensions
-
+- Module 3: Data-driven approach using Modulus Core and Introduction to Earth2Studio
+  - Lab 1: Training Physics-ML Models using Modulus Core
+  - Lab 2: Training Weather forecasting Models using Modulus Core
+  - Lab 3: Introduction to Earth2Studio - Deterministic Inference
+  - Lab 4: Introduction to Earth2Studio - Diagnostic & Ensemble Inference
 ## Tools and frameworks:
 
 The tools and frameworks used in the bootcamp are as follows:
 - [NVIDIA® Modulus](https://developer.nvidia.com/modulus)
-- [NVIDIA Omniverse™](https://www.nvidia.com/en-in/omniverse/)
+- [NVIDIA Earth2Studio](https://github.com/NVIDIA/earth2studio)
+- [ParaView](https://www.paraview.org/)
 
 ## Bootcamp duration:
 
@@ -52,4 +53,4 @@ Don't forget to check out additional [Open Hackathons Resources](https://www.ope
 
 ## Licensing
 
-Copyright © 2023 OpenACC-Standard.org. This material is released by OpenACC-Standard.org, in collaboration with NVIDIA Corporation, under the Creative Commons Attribution 4.0 International (CC BY 4.0). These materials may include references to hardware and software developed by other entities; all applicable licensing and copyrights apply.
+Copyright © 2024 OpenACC-Standard.org. This material is released by OpenACC-Standard.org, in collaboration with NVIDIA Corporation, under the Creative Commons Attribution 4.0 International (CC BY 4.0). These materials may include references to hardware and software developed by other entities; all applicable licensing and copyrights apply.
