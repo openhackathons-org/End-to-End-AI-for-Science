@@ -20,22 +20,15 @@ The content is structured in multiple modules covering the following:
 - Module 2: Data-driven approach to an AI for Scientific application.
   - Lab 1: Solving the Darcy-Flow problem using FNO
   - Lab 2: Solving the Darcy-Flow problem using AFNO
-  - Lab 3: Forecasting weather using FourCastNet
-- Module 3: Data-driven approach using Modulus Core and Introduction to Earth2Studio
-  - Lab 1: Training Physics-ML Models using Modulus Core
-  - Lab 2: Training Weather forecasting Models using Modulus Core
-  - Lab 3: Introduction to Earth2Studio - Deterministic Inference
-  - Lab 4: Introduction to Earth2Studio - Diagnostic & Ensemble Inference
+  
 ## Tools and frameworks:
 
 The tools and frameworks used in the bootcamp are as follows:
 - [NVIDIA® Modulus](https://developer.nvidia.com/modulus)
-- [NVIDIA Earth2Studio](https://github.com/NVIDIA/earth2studio)
-- [ParaView](https://www.paraview.org/)
 
 ## Bootcamp duration:
 
-The overall bootcamp will take approximately 14 hours. 
+The overall bootcamp will take approximately 3 hours.
 
 ## Bootcamp prerequisites:
 
