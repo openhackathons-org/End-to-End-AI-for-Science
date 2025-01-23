@@ -15,21 +15,9 @@ RUN pip3 install --upgrade nbconvert
 COPY workspace/ /workspace/
 
 # This Installs All the Dataset
-RUN python3 /workspace/python/source_code/dataset.py
+RUN python3 /workspace/python/source_code/dataset_NS.py
 
-# This decompresses the Dataset for usage 
-RUN python3 /workspace/python/source_code/fourcastnet/decompress.py
-
-# Remove Compressed files
-RUN rm -rf /workspace/python/source_code/fourcastnet/pre_data
-
-# Install Earth-2 Studio
-RUN apt update && apt install ffmpeg -y
-#RUN git clone https://github.com/NVIDIA/earth2mip.git && cd earth2mip && pip install . 
-RUN pip install "makani[all] @ git+https://github.com/NVIDIA/modulus-makani.git@v0.1.0"
-RUN pip install torch-harmonics==0.6.5
-RUN pip install earth2studio[all]==0.2.0 
-RUN pip install cartopy mlflow
+RUN python3 /workspace/python/source_code/dataset_darcy.py
 
 ## Uncomment this line to run Jupyter notebook by default
 CMD jupyter-lab --no-browser --allow-root --ip=0.0.0.0 --port=8888 --NotebookApp.token="" --notebook-dir=/workspace/python/

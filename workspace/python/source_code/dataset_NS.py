@@ -23,34 +23,8 @@ import gdown
 import os
 import subprocess
 
-## FCN Dataset 
-url = 'https://drive.google.com/uc?id=1mSN6eLqPYEo9d9pBjSGzQ-ocLd8itP0P&export=download'
-output = str(os.path.realpath(os.path.dirname(__file__)))+ '/fourcastnet/dataset.zip'
-gdown.cached_download(url, output, quiet=False,proxy=None,postprocess=gdown.extractall)
-os.remove(output)
-
-## FCN Pre-trained 
-url = 'https://drive.google.com/uc?id=1oSkK69LGP3DfU2tlH5iaejOh94VNsMDu&export=download'
-output = str(os.path.realpath(os.path.dirname(__file__)))+ '/../jupyter_notebook/FourCastNet/pre_trained.zip' 
-gdown.cached_download(url, output, quiet=False,proxy=None,postprocess=gdown.extractall)
-os.remove(output)
-
 ## NS Data
 url = 'https://drive.google.com/uc?id=1IXEGbM3NOO6Dig1sxG1stHubwb09-D2N&export=download'
 output = str(os.path.realpath(os.path.dirname(__file__)))+ '/navier_stokes/dataset.zip'
 gdown.cached_download(url, output, quiet=False,proxy=None,postprocess=gdown.extractall)
 os.remove(output)
-
-# Darcy Flow Dataset
-id = "1aRCdIMgAwUrgGuUCifnoKgwT5-c9YlAT"
-output = str(os.path.realpath(os.path.dirname(__file__)))+ '/../jupyter_notebook/Operators/datasets/'
-gdown.download(id=id,output=output,quiet=False,proxy=None)
-
-subprocess.run(['unzip',output+"darcy_processed.zip",'-d',output])
-## Downloading Modulus Core Dataset 
-url = 'https://drive.google.com/uc?id=12B_B8QIHI25VwNfNDB-L8ffsPKtC40dL&export=download'
-output = str(os.path.realpath(os.path.dirname(__file__)))+ '/core/dataset.zip'
-gdown.cached_download(url, output, quiet=False,proxy=None,postprocess=gdown.extractall)
-os.remove(output)
-
-

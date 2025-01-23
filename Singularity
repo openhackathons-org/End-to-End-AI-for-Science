@@ -9,15 +9,8 @@ FROM: nvcr.io/nvidia/modulus/modulus:24.04
 %post
     pip3 install gdown ipympl cdsapi
     pip3 install --upgrade nbconvert
-    python3 /workspace/python/source_code/dataset.py    
-    python3 /workspace/python/source_code/fourcastnet/decompress.py
-    rm -rf /workspace/python/source_code/fourcastnet/pre_data
-    
-    apt update && apt install ffmpeg -y
-    pip install torch-harmonics==0.6.5
-    pip install "makani[all] @ git+https://github.com/NVIDIA/modulus-makani.git@v0.1.0"
-    pip install earth2studio[all]==0.2.0 
-    pip install cartopy mlflow
+    python3 /workspace/python/source_code/dataset_NS.py    
+    python3 /workspace/python/source_code/dataset_darcy.py    
     
 %files
     workspace/* /workspace/
