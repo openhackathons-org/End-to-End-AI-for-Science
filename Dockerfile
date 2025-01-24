@@ -1,7 +1,7 @@
 # Copyright (c) 2024 NVIDIA Corporation.  All rights reserved.
 
 # To build the docker container, run: $ sudo docker build -t openhackathons:ai-for-science .
-# To run: $ sudo docker run --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 -p 8888:8888 -p 8899:8899 -it --rm openhackathons:ai-for-science-v2
+# To run: $ sudo docker run --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 -p 8888:8888 -p 8899:8899 -it --rm openhackathons:ai-for-science
 # Finally, open http://127.0.0.1:8888/
 
 # Select Base Image 
