@@ -3,7 +3,8 @@
 # To Run this : $ singularity run --writable --nv End-to-End-AI-for-Science.sif jupyter-lab --no-browser --allow-root --ip=0.0.0.0 --port=8888 --NotebookApp.token="" --notebook-dir=/workspace/python
 
 Bootstrap: docker
-FROM: nvcr.io/nvidia/modulus/modulus:24.04
+FROM: nvcr.io/nvidia/physicsnemo/physicsnemo:25.03
+FROM:python:3.10  
 
 %environment
 %post
@@ -14,9 +15,9 @@ FROM: nvcr.io/nvidia/modulus/modulus:24.04
     rm -rf /workspace/python/source_code/fourcastnet/pre_data
     
     apt update && apt install ffmpeg -y
-    pip install torch-harmonics==0.6.5
+    pip install torch-harmonics
     pip install "makani[all] @ git+https://github.com/NVIDIA/modulus-makani.git@v0.1.0"
-    pip install earth2studio[all]==0.2.0 
+    pip install earth2studio
     pip install cartopy mlflow
     
 %files
