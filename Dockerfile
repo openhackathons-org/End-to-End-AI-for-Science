@@ -8,12 +8,16 @@
 FROM nvcr.io/nvidia/physicsnemo/physicsnemo:25.03
 ### check python version makani will give error with 3.12
 FROM python:3.10  
+
+# Update pip 
+RUN pip3 install --user --upgrade pip
+
 # Install required python packages
 RUN pip3 install gdown ipympl cdsapi
 RUN pip3 install --upgrade nbconvert
 RUN pip3 install h5py
-RUN apt-get update && apt-get install -y libgl1-mesa-glx libglib2.0-0
 RUN pip3 install opencv-python
+RUN apt-get update && apt-get install -y libgl1-mesa-glx libglib2.0-0 xvfb
 
 # TO COPY the data 
 COPY workspace/ /workspace/
@@ -37,6 +41,9 @@ RUN pip install "makani[all] @ git+https://github.com/NVIDIA/modulus-makani.git@
 RUN pip install torch-harmonics
 RUN pip install earth2studio
 RUN pip install cartopy mlflow
+
+# Install DoMINO packages
+RUN pip3 install --user -r /workspace/python/jupyter_notebook/DoMINO/requirements.txt
 
 ## Uncomment this line to run Jupyter notebook by default
 CMD jupyter-lab --no-browser --allow-root --ip=0.0.0.0 --port=8888 --NotebookApp.token="" --notebook-dir=/workspace/python/
