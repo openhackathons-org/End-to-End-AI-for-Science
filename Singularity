@@ -4,7 +4,6 @@
 
 Bootstrap: docker
 FROM: nvcr.io/nvidia/physicsnemo/physicsnemo:25.03
-FROM:python:3.10  
 
 %environment
 %post
@@ -15,10 +14,9 @@ FROM:python:3.10
     rm -rf /workspace/python/source_code/fourcastnet/pre_data
     
     apt update && apt install ffmpeg -y
-    pip install torch-harmonics
-    pip install "makani[all] @ git+https://github.com/NVIDIA/modulus-makani.git@v0.1.0"
-    pip install earth2studio
-    pip install cartopy mlflow
+    pip install --no-cache-dir --no-deps -e git+https://github.com/NVIDIA/modulus-makani.git@v0.1.0#egg=makani  
+    pip install --no-cache-dir "earth2studio==0.5.0"
+    pip install --no-cache-dir cartopy mlflow
     
 %files
     workspace/* /workspace/
