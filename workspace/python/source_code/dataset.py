@@ -54,3 +54,9 @@ gdown.cached_download(url, output, quiet=False,proxy=None,postprocess=gdown.extr
 os.remove(output)
 
 
+## Downloading DoMINO Dataset 
+url = 'https://drive.google.com/file/d/1dB_-ggzFLPJYAXLUccaGGT_nvk03rYgb/view?usp=sharing'
+output = str(os.path.realpath(os.path.dirname(__file__)))+ '/domino/dataset.zip'
+gdown.cached_download(url, output, quiet=False,proxy=None,postprocess=gdown.extractall)
+os.remove(output)
+
