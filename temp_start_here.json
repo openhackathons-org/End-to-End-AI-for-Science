@@ -70,10 +70,6 @@
     "    - [FourCastNet - An overview of the Architecture](jupyter_notebook/FourCastNet/Forecasting-weather-FourCastNet.ipynb#FourCastNet---An-overview-of-the-Architecture)\n",
     "    - [Forecasting weather using FourCastNet](jupyter_notebook/FourCastNet/Forecasting-weather-FourCastNet.ipynb#Forecasting-weather-using-FourCastNet)\n",
     "\n",
-    "4. [DoMINO Data Preprocessing Recipe](jupyter_notebook/DoMINO/domino-data-preprocessing.ipynb)\n",
-    "    - [DoMINO Architecture and Training Recipe](jupyter_notebook/DoMINO/domino-training.ipynb)\n",
-    "    - [DoMINO Inference Recipe](jupyter_notebook/DoMINO/domino-training.ipynb)\n",
-    "\n",
     "\n",
     "### Data-driven Approach using Modulus Core and Introduction to Earth2Studio:\n",
     "\n",
@@ -97,7 +93,16 @@
     "    - [Running Ensemble Inference with Earth2Studio](jupyter_notebook/Earth2Studio/Earth2Studio_P2.ipynb#Running-Ensemble-Inference)\n",
     "\n",
     "\n",
-    "\n"
+    "### DoMINO - Deep learning for Multi-component INverse problems with Operator learning:\n",
+    "\n",
+    "1. [DoMINO - Data Preprocessing](jupyter_notebook/DoMINO/domino-data-preprocessing.ipynb)\n",
+    "    - Data preparation and preprocessing for DoMINO models\n",
+    "\n",
+    "2. [DoMINO - Training](jupyter_notebook/DoMINO/domino-training.ipynb)\n",
+    "    - Training DoMINO models for inverse problems\n",
+    "\n",
+    "3. [DoMINO - Testing](jupyter_notebook/DoMINO/domino-testing.ipynb)\n",
+    "    - Testing and evaluating DoMINO models\n"
    ]
   },
   {
@@ -137,4 +142,4 @@
  },
  "nbformat": 4,
  "nbformat_minor": 4
-}
+} 
