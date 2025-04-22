@@ -55,8 +55,11 @@ os.remove(output)
 
 
 ## Downloading DoMINO Dataset 
-url = 'https://drive.google.com/file/d/1dB_-ggzFLPJYAXLUccaGGT_nvk03rYgb/view?usp=sharing'
-output = str(os.path.realpath(os.path.dirname(__file__)))+ '/domino/dataset.zip'
-gdown.cached_download(url, output, quiet=False,proxy=None,postprocess=gdown.extractall)
-os.remove(output)
+# id = "1dB_-ggzFLPJYAXLUccaGGT_nvk03rYgb"
+# output = str(os.path.realpath(os.path.dirname(__file__)))+ '/domino/dataset.zip'
+# # Make sure the directory exists
+# os.makedirs(os.path.dirname(output), exist_ok=True)
+# gdown.download(id=id, output=output, quiet=False)
+# subprocess.run(['unzip', output, '-d', os.path.dirname(output)])
+# os.remove(output)
 
