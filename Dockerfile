@@ -11,6 +11,9 @@ FROM python:3.10
 # Install required python packages
 RUN pip3 install gdown ipympl cdsapi
 RUN pip3 install --upgrade nbconvert
+RUN pip3 install h5py
+RUN apt-get update && apt-get install -y libgl1-mesa-glx libglib2.0-0
+RUN pip3 install opencv-python
 
 # TO COPY the data 
 COPY workspace/ /workspace/
