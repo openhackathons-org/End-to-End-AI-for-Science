@@ -23,7 +23,6 @@ widgetsnbextension>=4.0.0
 
 # Additional project dependencies
 apex
-pyramid<2.0.0
 boto3==1.34.69
 opencv-python==4.8.0.74
 numpy-stl>=2.16.3
