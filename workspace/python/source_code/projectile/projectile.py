@@ -22,30 +22,30 @@
 import numpy as np
 from sympy import Symbol, sin, cos, pi,  Eq
 import torch
-import modulus
-from modulus.sym.hydra import instantiate_arch, ModulusConfig
-from modulus.sym.solver import Solver
-from modulus.sym.domain import Domain
-from modulus.sym.geometry.primitives_1d import Line1D,Point1D
-from modulus.sym.geometry.primitives_2d import Rectangle
-from modulus.sym.domain.constraint import (
+import physicsnemo
+from physicsnemo.sym.hydra import instantiate_arch, PhysicsNeMoConfig
+from physicsnemo.sym.solver import Solver
+from physicsnemo.sym.domain import Domain
+from physicsnemo.sym.geometry.primitives_1d import Line1D,Point1D
+from physicsnemo.sym.geometry.primitives_2d import Rectangle
+from physicsnemo.sym.domain.constraint import (
         PointwiseBoundaryConstraint,
         PointwiseInteriorConstraint,
 )
-from modulus.sym.domain.inferencer import PointwiseInferencer
-from modulus.sym.domain.validator import PointwiseValidator
-from modulus.sym.key import Key
-from modulus.sym.node import Node
+from physicsnemo.sym.domain.inferencer import PointwiseInferencer
+from physicsnemo.sym.domain.validator import PointwiseValidator
+from physicsnemo.sym.key import Key
+from physicsnemo.sym.node import Node
 from projectile_eqn import ProjectileEquation
-from modulus.sym.utils.io import (
+from physicsnemo.sym.utils.io import (
     csv_to_dict,
     ValidatorPlotter,
     InferencerPlotter,
 )
 
 
-@modulus.sym.main(config_path="conf", config_name="config")
-def run(cfg: ModulusConfig) -> None:
+@physicsnemo.sym.main(config_path="conf", config_name="config")
+def run(cfg: PhysicsNeMoConfig) -> None:
     #Creating Nodes and Domain
     pe = ProjectileEquation()
     projectile_net = instantiate_arch(
