@@ -45,21 +45,17 @@ os.remove(output)
 id = "1aRCdIMgAwUrgGuUCifnoKgwT5-c9YlAT"
 output = str(os.path.realpath(os.path.dirname(__file__)))+ '/../jupyter_notebook/Operators/datasets/'
 gdown.download(id=id,output=output,quiet=False,proxy=None)
-
 subprocess.run(['unzip',output+"darcy_processed.zip",'-d',output])
+
 ## Downloading Modulus Core Dataset 
 url = 'https://drive.google.com/uc?id=12B_B8QIHI25VwNfNDB-L8ffsPKtC40dL&export=download'
 output = str(os.path.realpath(os.path.dirname(__file__)))+ '/core/dataset.zip'
 gdown.cached_download(url, output, quiet=False,proxy=None,postprocess=gdown.extractall)
 os.remove(output)
 
-
-## Downloading DoMINO Dataset 
-# id = "1dB_-ggzFLPJYAXLUccaGGT_nvk03rYgb"
-# output = str(os.path.realpath(os.path.dirname(__file__)))+ '/domino/dataset.zip'
-# # Make sure the directory exists
-# os.makedirs(os.path.dirname(output), exist_ok=True)
-# gdown.download(id=id, output=output, quiet=False)
-# subprocess.run(['unzip', output, '-d', os.path.dirname(output)])
+## Downloading Modulus Core Dataset 
+# url = 'https://drive.google.com/uc?id=1KG9Vz0iepB-KyO44fRMeyf1RKoRSMdgE&export=download'
+# output = str(os.path.realpath(os.path.dirname(__file__)))+ '/DoMINO/dataset.zip'
+# gdown.cached_download(url, output, quiet=False,proxy=None,postprocess=gdown.extractall)
 # os.remove(output)
 
