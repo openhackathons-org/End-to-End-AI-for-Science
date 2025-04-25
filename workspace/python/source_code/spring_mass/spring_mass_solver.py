@@ -22,25 +22,25 @@
 import numpy as np
 from sympy import Symbol, Eq
 
-import pyhiscsnemo
-from pyhiscsnemo.sym.hydra import PyhiscsNeMoConfig, instantiate_arch
-from pyhiscsnemo.sym.solver import Solver
-from pyhiscsnemo.sym.domain import Domain
-from pyhiscsnemo.sym.geometry.primitives_1d import Point1D
-from pyhiscsnemo.sym.geometry import Parameterization
-from pyhiscsnemo.sym.domain.constraint import (
+import physicsnemo
+from physicsnemo.sym.hydra import PhysicsNeMoConfig, instantiate_arch
+from physicsnemo.sym.solver import Solver
+from physicsnemo.sym.domain import Domain
+from physicsnemo.sym.geometry.primitives_1d import Point1D
+from physicsnemo.sym.geometry import Parameterization
+from physicsnemo.sym.domain.constraint import (
     PointwiseBoundaryConstraint,
     PointwiseBoundaryConstraint,
 )
-from pyhiscsnemo.sym.domain.validator import PointwiseValidator
-from pyhiscsnemo.sym.key import Key
-from pyhiscsnemo.sym.node import Node
+from physicsnemo.sym.domain.validator import PointwiseValidator
+from physicsnemo.sym.key import Key
+from physicsnemo.sym.node import Node
 
 from spring_mass_ode import SpringMass
 
 
-@pyhiscsnemo.sym.main(config_path="conf", config_name="config")
-def run(cfg: PyhiscsNeMoConfig) -> None:
+@physicsnemo.sym.main(config_path="conf", config_name="config")
+def run(cfg: PhysicsNeMoConfig) -> None:
     # make list of nodes to unroll graph on
     sm = SpringMass(k=(2, 1, 1, 2), m=(1, 1, 1))
     sm_net = instantiate_arch(
