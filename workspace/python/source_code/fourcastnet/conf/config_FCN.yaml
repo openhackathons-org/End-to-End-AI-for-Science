@@ -36,7 +36,7 @@ batch_size:
   validation: 1
 
 training:
-  amp: true
+  # amp: true
   rec_constraint_freq: 10000
   rec_results_freq : 1000
   save_network_freq: 1000
