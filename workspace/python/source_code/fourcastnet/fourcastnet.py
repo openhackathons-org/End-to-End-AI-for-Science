@@ -21,23 +21,23 @@
 # Script to train Fourcastnet on ERA5
 # Ref: https://arxiv.org/abs/2202.11214
 
-import modulus
+import physicsnemo
 
-from modulus.sym.hydra.config import ModulusConfig
-from modulus.sym.key import Key
-from modulus.sym.domain import Domain
-from modulus.sym.domain.constraint import SupervisedGridConstraint
-from modulus.sym.domain.validator import GridValidator
-from modulus.sym.solver import Solver
-from modulus.sym.utils.io import GridValidatorPlotter
+from physicsnemo.sym.hydra.config import PhysicsNeMoConfig
+from physicsnemo.sym.key import Key
+from physicsnemo.sym.domain import Domain
+from physicsnemo.sym.domain.constraint import SupervisedGridConstraint
+from physicsnemo.sym.domain.validator import GridValidator
+from physicsnemo.sym.solver import Solver
+from physicsnemo.sym.utils.io import GridValidatorPlotter
 
 from src.dataset import ERA5HDF5GridDataset
 from src.fourcastnet import FourcastNetArch
 from src.loss import LpLoss
 
 
-@modulus.sym.main(config_path="conf", config_name="config_FCN")
-def run(cfg: ModulusConfig) -> None:
+@physicsnemo.sym.main(config_path="conf", config_name="config_FCN")
+def run(cfg: PhysicsNeMoConfig) -> None:
 
     # load training/ test data
     channels = list(range(cfg.custom.n_channels))
