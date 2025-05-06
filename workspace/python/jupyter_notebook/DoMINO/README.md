@@ -124,13 +124,13 @@ apt install  xvfb
 
 ## Course Modules
 
-### 1. [Preprocessing Ahmed body dataset for training with DoMINO](exercises/DLI_01.ipynb)
+### 1. [Preprocessing Ahmed body dataset for training with DoMINO](domino-data-preprocessing.ipynb)
 - Loading and understanding VTK simulation data
 - Data normalization techniques for ML
 - Extracting key physical quantities
 - Creating standardized datasets for training
 
-### 2. [Training DoMINO Model](exercises/DLI_02.ipynb)
+### 2. [Training and Inferencing DoMINO Model](domino-training-test.ipynb)
 - Understanding DoMINO architecture and physics-informed learning
 - Training process
 - Load Model Checkpoint & Run Inference
