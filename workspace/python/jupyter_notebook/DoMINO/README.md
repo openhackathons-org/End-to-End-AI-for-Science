@@ -138,8 +138,8 @@ apt install  xvfb
 
 ### Hardware Requirements
 - NVIDIA GPU with CUDA support
-- 40GB+ RAM
-- 300GB+ disk space
+- 4GB+ RAM
+- 100GB+ disk space
 
 ### Software Requirements
 - Docker with NVIDIA Container Toolkit
