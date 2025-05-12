@@ -23,17 +23,17 @@ import gdown
 import os
 import subprocess
 
-## FCN Dataset 
-url = 'https://drive.google.com/uc?id=1mSN6eLqPYEo9d9pBjSGzQ-ocLd8itP0P&export=download'
-output = str(os.path.realpath(os.path.dirname(__file__)))+ '/fourcastnet/dataset.zip'
-gdown.cached_download(url, output, quiet=False,proxy=None,postprocess=gdown.extractall)
-os.remove(output)
+# ## FCN Dataset 
+# url = 'https://drive.google.com/uc?id=1mSN6eLqPYEo9d9pBjSGzQ-ocLd8itP0P&export=download'
+# output = str(os.path.realpath(os.path.dirname(__file__)))+ '/fourcastnet/dataset.zip'
+# gdown.cached_download(url, output, quiet=False,proxy=None,postprocess=gdown.extractall)
+# os.remove(output)
 
-## FCN Pre-trained 
-url = 'https://drive.google.com/uc?id=1oSkK69LGP3DfU2tlH5iaejOh94VNsMDu&export=download'
-output = str(os.path.realpath(os.path.dirname(__file__)))+ '/../jupyter_notebook/FourCastNet/pre_trained.zip' 
-gdown.cached_download(url, output, quiet=False,proxy=None,postprocess=gdown.extractall)
-os.remove(output)
+# ## FCN Pre-trained 
+# url = 'https://drive.google.com/uc?id=1oSkK69LGP3DfU2tlH5iaejOh94VNsMDu&export=download'
+# output = str(os.path.realpath(os.path.dirname(__file__)))+ '/../jupyter_notebook/FourCastNet/pre_trained.zip' 
+# gdown.cached_download(url, output, quiet=False,proxy=None,postprocess=gdown.extractall)
+# os.remove(output)
 
 ## NS Data
 url = 'https://drive.google.com/uc?id=1IXEGbM3NOO6Dig1sxG1stHubwb09-D2N&export=download'

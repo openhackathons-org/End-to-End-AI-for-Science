@@ -6,18 +6,10 @@
 
 # Select Base Image 
 FROM nvcr.io/nvidia/physicsnemo/physicsnemo:25.03
-### check python version makani will give error with 3.12
-FROM python:3.10  
-
-# Update pip 
-RUN pip3 install --user --upgrade pip
 
 # Install required python packages
 RUN pip3 install gdown ipympl cdsapi
 RUN pip3 install --upgrade nbconvert
-RUN pip3 install h5py
-RUN pip3 install opencv-python
-RUN apt-get update && apt-get install -y libgl1-mesa-glx libglib2.0-0 xvfb
 
 # TO COPY the data 
 COPY workspace/ /workspace/
@@ -25,22 +17,22 @@ COPY workspace/ /workspace/
 # This Installs All the Dataset
 RUN python3 /workspace/python/source_code/dataset.py
 
-# This decompresses the Dataset for usage 
-RUN python3 /workspace/python/source_code/fourcastnet/decompress.py
+# # This decompresses the Dataset for usage 
+# RUN python3 /workspace/python/source_code/fourcastnet/decompress.py
 
-# Remove Compressed files
-RUN rm -rf /workspace/python/source_code/fourcastnet/pre_data
+# # Remove Compressed files
+# RUN rm -rf /workspace/python/source_code/fourcastnet/pre_data
 
 # Install Earth-2 Studio
 RUN pip install jupyterlab
 RUN python -m pip install --upgrade pip setuptools wheel
-RUN apt update && apt install ffmpeg -y
-#RUN git clone https://github.com/NVIDIA/earth2mip.git && cd earth2mip && pip install . 
-#makani can stay the same for now
-RUN pip install "makani[all] @ git+https://github.com/NVIDIA/modulus-makani.git@v0.1.0"  
-RUN pip install torch-harmonics
-RUN pip install earth2studio
-RUN pip install cartopy mlflow
+# RUN apt update && apt install ffmpeg -y
+# #RUN git clone https://github.com/NVIDIA/earth2mip.git && cd earth2mip && pip install . 
+# #makani can stay the same for now
+# RUN pip install "makani[all] @ git+https://github.com/NVIDIA/modulus-makani.git@v0.1.0"  
+# RUN pip install torch-harmonics
+# RUN pip install earth2studio
+# RUN pip install cartopy mlflow
 
 # Install DoMINO packages
 RUN pip3 install --user -r /workspace/python/jupyter_notebook/DoMINO/requirements.txt
