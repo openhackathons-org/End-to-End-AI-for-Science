@@ -140,6 +140,12 @@ with a TFNO model, simply run,
 torchrun --standalone --nnodes=1 --nproc_per_node=<num_gpus> train_mhd_vec_pot_tfno.py
 ```
 
+torchrun --standalone --nnodes=1 --nproc_per_node=1 train_mhd_vec_pot_tfno.py
+
+/workspace/End-to-End-AI-for-Science/workspace/python/source_code/mhd
+torchrun --standalone --nnodes=1 --nproc_per_node=1 evaluate_mhd_vec_pot_tfno.py
+
+
 ## References
 
 - [Magnetohydrodynamics with Physics Informed Neural Operators](https://arxiv.org/abs/2302.08332)

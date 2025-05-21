@@ -48,7 +48,7 @@ model_params:
 ###################
 ## Dataset options
 dataset_params:
-  data_dir: '/workspace/mhd_data/simulation_outputs_Re250'
+  data_dir: '/workspace/PhysicsNeMo/mhd_data/simulation_outputs_Re250'
   field_names: ['velocity', 'vector potential']
   output_names: 'output-????'
   dataset_type: 'mhd'
@@ -69,19 +69,19 @@ dataset_params:
 train_loader_params:
   batch_size: 1
   shuffle: True
-  num_workers: 32
+  num_workers: 4
   pin_memory: True
 
 val_loader_params:
   batch_size: 1
   shuffle: False
-  num_workers: 32
+  num_workers: 4
   pin_memory: True
 
 test_loader_params:
   batch_size: 1
   shuffle: False
-  num_workers: 32
+  num_workers: 4
   pin_memory: True
 
 ###################
