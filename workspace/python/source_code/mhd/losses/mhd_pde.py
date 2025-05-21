@@ -92,12 +92,12 @@ class MHD_PDE(PDE):
         self.equations["By_rhs"] = -(
             self.equations["uBy_x"] - self.equations["vBx_x"]
         ) + eta * By.diff(lap)
-
+        # Node 18, 19, 20, 21
         self.equations["Du"] = u.diff(t) - u_rhs
         self.equations["Dv"] = v.diff(t) - v_rhs
         self.equations["DBx"] = Bx.diff(t) - Bx_rhs
         self.equations["DBy"] = By.diff(t) - By_rhs
-
+        # Node 22, 23, 24
         # Vec potential equations
         self.equations["vel_grad_A"] = u * A.diff(x) + v * A.diff(y)
         self.equations["A_rhs"] = -self.equations["vel_grad_A"] + +eta * A.diff(lap)
