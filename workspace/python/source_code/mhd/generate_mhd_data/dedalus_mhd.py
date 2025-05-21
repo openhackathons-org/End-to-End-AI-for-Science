@@ -22,7 +22,7 @@ built-in analysis framework to save data snapshots to HDF5 files.
 The simulation should take at least 150 cpu-minutes to run.
 
 The initial flow is in the x-direction and depends only on z. The problem is
-non-dimensionalized usign the shear-layer spacing and velocity jump, so the
+non-dimensionalized using the shear-layer spacing and velocity jump, so the
 resulting viscosity and tracer diffusivity are related to the Reynolds and
 Schmidt numbers as:
 
