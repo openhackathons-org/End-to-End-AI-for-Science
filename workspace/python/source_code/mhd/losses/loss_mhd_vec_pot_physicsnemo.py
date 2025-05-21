@@ -327,6 +327,28 @@ class LossMHDVecPot_PhysicsNeMo(object):
         div_vel = self.mhd_pde_node[13].evaluate({"u__x": u_x, "v__y": v_y})["div_vel"]
 
         return div_vel, div_B
+    
+    def mhd_constraint_loss(self, div_vel, div_B, return_all_losses=False):
+        "Compute constraint loss"
+        div_vel_val = torch.zeros_like(div_vel)
+        div_B_val = torch.zeros_like(div_B)
+
+        loss_div_vel = F.mse_loss(div_vel, div_vel_val)
+        loss_div_B = F.mse_loss(div_B, div_B_val)
+
+        if self.use_weighted_mean:
+            weight_sum = self.div_vel_weight + self.div_B_weight
+        else:
+            weight_sum = 1.0
+
+        loss_constraint = (
+            self.div_vel_weight * loss_div_vel + self.div_B_weight * loss_div_B
+        ) / weight_sum
+
+        if return_all_losses:
+            return loss_constraint, loss_div_vel, loss_div_B
+        else:
+            return loss_constraint
 
     def mhd_pde(self, u, v, A, p=None):
         "Compute PDEs for MHD using vector potential"
@@ -411,5 +433,9 @@ class LossMHDVecPot_PhysicsNeMo(object):
         DA = self.mhd_pde_node[24].evaluate({"A__t": A_t, "A_rhs": A_rhs[:, 1:-1]})[
             "DA"
         ]
-
         return Du, Dv, DA
+
+    def Du_t(self, u, dt):
+        "Compute time derivative"
+        u_t = (u[:, 2:] - u[:, :-2]) / (2 * dt)
+        return u_t
