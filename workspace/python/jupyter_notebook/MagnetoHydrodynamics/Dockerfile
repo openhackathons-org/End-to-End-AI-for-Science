@@ -28,27 +28,29 @@ RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86
 
 ENV PATH=$CONDA_DIR/bin:$PATH
 
+# set up a conda env (only used when generating data)
 RUN conda config --add channels conda-forge
 RUN conda config --set channel_priority strict
 RUN conda create -n env python=3.12
-# Put conda in path so we can use conda activate
+
+# put conda in path so we can use conda activate
 ENV PATH=/opt/conda/envs/env/bin:$PATH
 
+# these env variables are recommended by dedalus package 
 RUN conda run -n env conda env config vars set OMP_NUM_THREADS=1
 RUN conda run -n env conda env config vars set NUMEXPR_MAX_THREADS=1
 # RUN conda install -c conda-forge dedalus
 RUN conda run -n env conda install -c conda-forge dedalus
 
+# install nvidia-physicsnemo
 RUN pip install nvidia-physicsnemo
 
 # copy requirements and install
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
-# install nvidia-physicsnemo
+# install nvidia-physicsnemo sym
 RUN pip install nvidia-physicsnemo.sym --no-build-isolation
-
-# RUN echo "source activate env" > ~/.bashrc
 
 WORKDIR /workspace
 USER mhduser
