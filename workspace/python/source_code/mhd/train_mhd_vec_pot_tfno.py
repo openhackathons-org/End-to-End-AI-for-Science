@@ -39,7 +39,7 @@ torch.set_default_dtype(dtype)
 
 
 @hydra.main(
-    version_base="1.3", config_path="config", config_name="mhd_vec_pot_tfno_Re250.yaml"
+    version_base="1.3", config_path="config", config_name="mhd_vec_pot_tfno_Re100.yaml"
 )
 def main(cfg: DictConfig) -> None:
     DistributedManager.initialize()  # Only call this once in the entire script!
@@ -198,7 +198,6 @@ def main(cfg: DictConfig) -> None:
     names = dataset_params.fields
     input_norm = torch.tensor(model_params.input_norm).to(dist.device)
     output_norm = torch.tensor(model_params.output_norm).to(dist.device)
-
     for epoch in range(max(1, loaded_epoch + 1), epochs + 1):
         with LaunchLogger(
             "train",
