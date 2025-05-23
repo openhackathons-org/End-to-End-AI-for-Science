@@ -21,6 +21,7 @@ The content is structured in multiple modules covering the following:
   - Lab 1: Solving the Darcy-Flow problem using FNO
   - Lab 2: Solving the Darcy-Flow problem using AFNO
   - Lab 3: Forecasting weather using FourCastNet
+  - Lab 4: Modeling Magnetohydrodynamics with Physics Informed Neural Operators
 - Module 3: Data-driven approach using PhysicsNeMo Core and Introduction to Earth2Studio
   - Lab 1: Training Physics-ML Models using PhysicsNeMo Core
   - Lab 2: Training Weather forecasting Models using PhysicsNeMo Core
