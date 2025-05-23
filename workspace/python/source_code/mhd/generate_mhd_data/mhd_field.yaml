@@ -14,15 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-output_dir: "../mhd_data/simulation_outputs_Re250/"           # Directory to store outputs
-movie_dir: "../mhd_data/simulation_outputs_Re250/movie/"      # Directory to store movie
+output_dir: "../mhd_data/simulation_outputs_Re100/"           # Directory to store outputs
+movie_dir: "../mhd_data/simulation_outputs_Re100/movie/"      # Directory to store movie
 N: 1000                                                       # Number of simulations to run
 Lx: 1.0                                                       # Length of domain in x direction
 Ly: 1.0                                                       # Length of domain in y direction
 Nx: 128                                                       # Number of points in x direction
 Ny: 128                                                       # Number of points in y direction
-Re: 250                                                       # Reynolds number
-ReM: 250                                                      # Magnetic Reynolds number
+Re: 100                                                       # Reynolds number
+ReM: 100                                                      # Magnetic Reynolds number
 Schmidt: 1.0                                                  # Schmit number
 rho0: 1.0                                                     # Density of fluid
 dealias: 1.5                                                  # Dealiasing factor
