@@ -6,7 +6,6 @@
 
 # Select Base Image 
 FROM nvcr.io/nvidia/physicsnemo/physicsnemo:25.03
-### check python version makani will give error with 3.12
 
 # Install required python packages
 RUN pip3 install gdown ipympl cdsapi
