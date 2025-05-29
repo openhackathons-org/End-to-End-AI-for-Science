@@ -29,9 +29,14 @@ RUN python -m pip install --upgrade pip setuptools wheel
 RUN apt update && apt install ffmpeg -y
 #RUN git clone https://github.com/NVIDIA/earth2mip.git && cd earth2mip && pip install . 
 #makani can stay the same for now
+
 RUN pip install --no-cache-dir --no-deps -e git+https://github.com/NVIDIA/modulus-makani.git@v0.1.0#egg=makani  
 RUN pip install --no-cache-dir "earth2studio==0.5.0"
 RUN pip install --no-cache-dir cartopy mlflow
+
+
+# Install DoMINO packages
+RUN pip3 install --user -r /workspace/python/jupyter_notebook/DoMINO/requirements.txt
 
 ## Uncomment this line to run Jupyter notebook by default
 CMD jupyter-lab --no-browser --allow-root --ip=0.0.0.0 --port=8888 --NotebookApp.token="" --notebook-dir=/workspace/python/

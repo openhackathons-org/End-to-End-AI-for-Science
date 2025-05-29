@@ -26,6 +26,9 @@ The content is structured in multiple modules covering the following:
   - Lab 2: Training Weather forecasting Models using PhysicsNeMo Core
   - Lab 3: Introduction to Earth2Studio - Deterministic Inference
   - Lab 4: Introduction to Earth2Studio - Diagnostic & Ensemble Inference
+- Module 4: Application of DoMINO to external aerodynamics simulations
+  - Lab 1: Data pre-processing pipeline for DoMINO
+  - Lab 2: Training and Inference recipe for DoMINO using PhysicsNeMo
 ## Tools and frameworks:
 
 The tools and frameworks used in the bootcamp are as follows:
