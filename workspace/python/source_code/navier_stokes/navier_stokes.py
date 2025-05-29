@@ -23,21 +23,21 @@ import numpy as np
 import os 
 from sympy import Symbol, Eq, Abs, sin, cos
 
-import modulus
-from modulus.sym.hydra import to_absolute_path, instantiate_arch, ModulusConfig
-from modulus.sym.eq.pdes.navier_stokes import NavierStokes
-from modulus.sym.geometry.primitives_2d import Rectangle as rect
-from modulus.sym.models.fully_connected import FullyConnectedArch
-from modulus.sym.key import Key
-from modulus.sym.node import Node
-from modulus.sym.solver import Solver
-from modulus.sym.domain import Domain
-from modulus.sym.domain.constraint import (
+import physicsnemo
+from physicsnemo.sym.hydra import to_absolute_path, instantiate_arch, PhysicsNeMoConfig
+from physicsnemo.sym.eq.pdes.navier_stokes import NavierStokes
+from physicsnemo.sym.geometry.primitives_2d import Rectangle as rect
+from physicsnemo.sym.models.fully_connected import FullyConnectedArch
+from physicsnemo.sym.key import Key
+from physicsnemo.sym.node import Node
+from physicsnemo.sym.solver import Solver
+from physicsnemo.sym.domain import Domain
+from physicsnemo.sym.domain.constraint import (
     PointwiseConstraint,
     PointwiseInteriorConstraint,
 )
-from modulus.sym.domain.inferencer import PointVTKInferencer
-from modulus.sym.utils.io import (
+from physicsnemo.sym.domain.inferencer import PointVTKInferencer
+from physicsnemo.sym.utils.io import (
     VTKUniformGrid,
 )
 
@@ -64,8 +64,8 @@ def read_wf_data(velocity_scale,pressure_scale):
     return invar, outvar
 
 
-@modulus.sym.main(config_path="conf", config_name="config")
-def run(cfg: ModulusConfig) -> None:
+@physicsnemo.sym.main(config_path="conf", config_name="config")
+def run(cfg: PhysicsNeMoConfig) -> None:
     
     # define sympy variables to parametrize domain curves
     x, y = Symbol("x"), Symbol("y")

@@ -23,23 +23,23 @@ import torch
 import numpy as np
 from sympy import Symbol, Eq, Function, Number
 
-import modulus
-from modulus.sym.hydra import instantiate_arch , ModulusConfig
-from modulus.sym.solver import Solver
-from modulus.sym.domain import Domain
-from modulus.sym.geometry import Parameterization
-from modulus.sym.geometry.primitives_1d import Line1D
-from modulus.sym.domain.constraint import (
+import physicsnemo
+from physicsnemo.sym.hydra import instantiate_arch , PhysicsNeMoConfig
+from physicsnemo.sym.solver import Solver
+from physicsnemo.sym.domain import Domain
+from physicsnemo.sym.geometry import Parameterization
+from physicsnemo.sym.geometry.primitives_1d import Line1D
+from physicsnemo.sym.domain.constraint import (
     PointwiseBoundaryConstraint,
     PointwiseInteriorConstraint,
 )
 
-from modulus.sym.domain.validator import PointwiseValidator
-from modulus.sym.domain.monitor import PointwiseMonitor
-from modulus.sym.key import Key
-from modulus.sym.node import Node
+from physicsnemo.sym.domain.validator import PointwiseValidator
+from physicsnemo.sym.domain.monitor import PointwiseMonitor
+from physicsnemo.sym.key import Key
+from physicsnemo.sym.node import Node
 
-from modulus.sym.eq.pde import PDE
+from physicsnemo.sym.eq.pde import PDE
 
 # params for domain
 L1 = Line1D(0, 1)
@@ -174,8 +174,8 @@ class DiffusionInterface(PDE):
         )
 
 
-@modulus.sym.main(config_path="conf", config_name="config_param")
-def run(cfg: ModulusConfig) -> None:
+@physicsnemo.sym.main(config_path="conf", config_name="config_param")
+def run(cfg: PhysicsNeMoConfig) -> None:
     
     # make list of nodes to unroll graph on
     diff_u1 = Diffusion(T="u_1", D="D1", dim=1, time=False)
