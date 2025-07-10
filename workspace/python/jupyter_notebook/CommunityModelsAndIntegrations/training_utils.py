@@ -1,7 +1,9 @@
 import logging
 import os
+from pathlib import Path
 from typing import Dict, Optional, Tuple, Union
 
+import hydra
 import torch
 from einops import rearrange
 from hydra.utils import instantiate
@@ -100,7 +102,7 @@ class Trainer:
     def _setup_logging(self):
         """Setup logging and monitoring."""
         self.log = PythonLogger(name="mhd_pino")
-        self.log.file_logging()
+        self.log.file_logging(Path(self.output_dir) / "mhd_pino.log")
 
         LaunchLogger.initialize(use_wandb=self.cfg.use_wandb)
 
@@ -310,8 +312,9 @@ class Trainer:
             Dictionary containing training metrics
         """
         with LaunchLogger(
-            "train",
+            "mhd_pino",
             epoch=epoch,
+            mini_batch_log_freq=10,
             num_mini_batch=len(self.datamodule.train_dataloader()),
             epoch_alert_freq=1,
         ) as log:
@@ -346,7 +349,7 @@ class Trainer:
         Returns:
             Dictionary containing validation metrics
         """
-        with LaunchLogger("valid", epoch=epoch) as log:
+        with LaunchLogger("mhd_pino", epoch=epoch) as log:
             self.model.eval()
 
             with torch.no_grad():
@@ -452,24 +455,22 @@ class Trainer:
         return self.scheduler
 
 
-# @hydra.main(
-#     version_base="1.3", config_path="config", config_name="pnm_model_well_data.yaml"
-# )
-# def main(cfg: DictConfig) -> None:
-#     """Training for the MHD problem.
+@hydra.main(version_base="1.3", config_path="config", config_name="mhd_config.yaml")
+def main(cfg: DictConfig) -> None:
+    """Training for the MHD problem.
 
-#     This training script demonstrates how to set up a data-driven model for a 2D MHD flow
-#     using Tensor Factorized Fourier Neural Operators (TFNO) and acts as a benchmark for this type of operator.
-#     Training data is generated in-situ via the MHD data loader from PhysicsNeMo. The model is trained
-#     over multiple epochs with validation and checkpointing.
-#     """
+    This training script demonstrates how to set up a data-driven model for a 2D MHD flow
+    using Tensor Factorized Fourier Neural Operators (TFNO) and acts as a benchmark for this type of operator.
+    Training data is generated in-situ via the MHD data loader from PhysicsNeMo. The model is trained
+    over multiple epochs with validation and checkpointing.
+    """
 
-#     # Create trainer instance
-#     trainer = Trainer(cfg)
+    # Create trainer instance
+    trainer = Trainer(cfg)
 
-#     # Start training
-#     trainer.train()
+    # Start training
+    trainer.train()
 
 
-# if __name__ == "__main__":
-#     main()
+if __name__ == "__main__":
+    main()
