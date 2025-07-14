@@ -18,8 +18,8 @@
 ## Training options
 load_ckpt: False
 use_wandb: False
-output_dir: './checkpoints/MHD_TFNO/MHD_TFNO/figures/'
-dummy_data: True
+output_dir: './outputs'
+dummy_data: False
 training: True
 
 ###################
@@ -39,7 +39,7 @@ model_params:
   pad_x: 5
   pad_y: 0
   pad_z: 0
-  
+
   #TensorLy arguments
   rank: 1.0
   factorization: 'tucker'
@@ -51,13 +51,13 @@ model_params:
 dataset_params:
   _target_: the_well.data.WellDataModule
   batch_size: 8
-  well_base_path: "hf://datasets/polymathic-ai/"
-  # well_base_path: ./datasets/datasets/
+  # well_base_path: "hf://datasets/polymathic-ai/"
+  well_base_path: ./TheWellMHDData/datasets
   well_dataset_name: MHD_64
   min_dt_stride: 1
   max_dt_stride: 1
   use_normalization: True
-  normalization_type: 
+  normalization_type:
     _partial_: true
     _target_: the_well.data.normalization.ZScoreNormalization
   n_steps_input: 4
@@ -67,8 +67,8 @@ dataset_params:
 ###################
 ## Dataloader options
 dataloader_params:
-  num_workers: 16
-  
+  num_workers: 8
+
 ###################
 ## Optimizer options
 optimizer_params:
@@ -81,11 +81,11 @@ optimizer_params:
 ###################
 ## Train params
 train_params:
-  epochs: 100
-  ckpt_freq: 50
-  ckpt_path: 'checkpoints/MHD_TFNO/MHD_TFNO/'
+  epochs: 10
+  ckpt_freq: 5
+  ckpt_path: 'outputs/checkpoints/'
 
 ###################
 test:
   batchsize: 1
-  ckpt_path: 'checkpoints/MHD_TFNO/MHD_TFNO/'
+  ckpt_path: 'outputs/checkpoints/'
