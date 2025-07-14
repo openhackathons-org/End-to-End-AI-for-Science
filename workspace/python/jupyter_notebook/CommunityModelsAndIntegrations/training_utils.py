@@ -208,10 +208,6 @@ class Trainer:
         """Denormalize batch using dataset normalization if available."""
         if hasattr(self, "dset_norm") and self.dset_norm:
             batch = self.dset_norm.denormalize_flattened(batch, "variable")
-            # if "constant_fields" in batch:
-            #     batch["constant_fields"] = self.dset_norm.denormalize_flattened(
-            #         batch["constant_fields"], "constant"
-            #     )
 
         return batch
 
@@ -318,26 +314,29 @@ class Trainer:
             num_mini_batch=len(self.datamodule.train_dataloader()),
             epoch_alert_freq=1,
         ) as log:
-            # if self.dist.distributed:
-            #     self.sampler_train.set_epoch(epoch)
-
             self.model.train()
             dataloader = self.datamodule.train_dataloader()
             print(f"Starting training epoch {epoch} with {len(dataloader)} batches")
+            total_train_loss = 0
             for i, batch in enumerate(dataloader):
                 # Move batch to device
-                batch = {
-                    k: v.type(torch.FloatTensor).to(self.dist.device)
-                    for k, v in batch.items()
-                }
+                if isinstance(batch, dict):
+                    batch = {
+                        k: v.type(torch.FloatTensor).to(self.dist.device)
+                        for k, v in batch.items()
+                    }
 
                 loss, loss_dict = self._training_step(batch)
+                total_train_loss += loss.item()
                 log.log_minibatch(loss_dict)
 
             log.log_epoch({"Learning Rate": self.optimizer.param_groups[0]["lr"]})
             self.scheduler.step()
 
-            return {"learning_rate": self.optimizer.param_groups[0]["lr"]}
+            return {
+                "learning_rate": self.optimizer.param_groups[0]["lr"],
+                "train_loss": round(total_train_loss / (i + 1), 4),
+            }
 
     def validate_epoch(self, epoch: int) -> Dict[str, float]:
         """
@@ -351,7 +350,7 @@ class Trainer:
         """
         with LaunchLogger("mhd_pino", epoch=epoch) as log:
             self.model.eval()
-
+            total_val_loss = 0
             with torch.no_grad():
                 for i, batch in enumerate(self.datamodule.val_dataloader()):
                     # Move batch to device
@@ -363,11 +362,12 @@ class Trainer:
                     pred = self._forward_pass(batch)
                     targets = batch["output_fields"]
                     loss = self.loss_fn(pred, targets)
-                    loss_dict = {"loss": loss.item()}
-
+                    total_val_loss += loss.item()
+                    loss_dict = {"val_loss": loss.item()}
                     log.log_minibatch(loss_dict)
 
-            return loss_dict
+            total_val_loss = round(total_val_loss / (i + 1), 4)
+            return {"val_loss": total_val_loss}
 
     def save_checkpoint(self, epoch: int):
         """
