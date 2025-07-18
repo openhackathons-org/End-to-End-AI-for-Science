@@ -354,9 +354,11 @@ class Trainer:
             with torch.no_grad():
                 for i, batch in enumerate(self.datamodule.val_dataloader()):
                     # Move batch to device
-                    batch = {
-                        k: v.type(dtype).to(self.dist.device) for k, v in batch.items()
-                    }
+                    if isinstance(batch, dict):
+                        batch = {
+                            k: v.type(torch.FloatTensor).to(self.dist.device)
+                            for k, v in batch.items()
+                        }
 
                     # Forward pass (includes normalization)
                     pred = self._forward_pass(batch)
@@ -427,9 +429,11 @@ class Trainer:
         with torch.no_grad():
             for batch in dataloader:
                 # Move batch to device
-                batch = {
-                    k: v.type(dtype).to(self.dist.device) for k, v in batch.items()
-                }
+                if isinstance(batch, dict):
+                    batch = {
+                        k: v.type(torch.FloatTensor).to(self.dist.device)
+                        for k, v in batch.items()
+                    }
 
                 # Forward pass (includes normalization)
                 pred = self._forward_pass(batch)
@@ -457,14 +461,20 @@ class Trainer:
 
 @hydra.main(version_base="1.3", config_path="config", config_name="mhd_config.yaml")
 def main(cfg: DictConfig) -> None:
-    """Training for the MHD problem.
+    """Generic setup for a Trainer used for the MHD problem.
 
-    This training script demonstrates how to set up a data-driven model for a 2D MHD flow
-    using Tensor Factorized Fourier Neural Operators (TFNO) and acts as a benchmark for this type of operator.
-    Training data is generated in-situ via the MHD data loader from PhysicsNeMo. The model is trained
-    over multiple epochs with validation and checkpointing.
+    The workflow involves extracting a config, setting up a model (implemented by the user),
+    and performing training and validation using physicsnemo-core. The implementation is
+    tailored for the MHD problem, howerver further customizations are possible by overriding
+    default methods.
+
+    Args:
+        cfg: Hydra configuration object containing all training parameters
+
+    Returns:
+        None
+
     """
-
     # Create trainer instance
     trainer = Trainer(cfg)
 
