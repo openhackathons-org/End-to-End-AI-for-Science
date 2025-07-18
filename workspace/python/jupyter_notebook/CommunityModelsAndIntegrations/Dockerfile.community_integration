@@ -27,8 +27,8 @@ RUN apt-get update && apt-get install -y python3-pip
 RUN apt install python3.12-venv -y
 
 ARG RECOMPILE=1
-RUN groupadd -g 748400513 docker && \
-    useradd -m -u 1776716446 -g docker dockeruser
+RUN groupadd -g 1111 docker && \
+    useradd -m -u 1111 -g docker dockeruser
 
 RUN python3 -m venv /venv
 
