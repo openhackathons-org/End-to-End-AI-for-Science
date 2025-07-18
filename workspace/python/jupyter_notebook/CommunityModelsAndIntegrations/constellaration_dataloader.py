@@ -9,7 +9,7 @@ from constellaration.geometry.surface_rz_fourier import (
 )
 
 
-CHALLENGE_OUTPUTS = {
+CHALLENGE_KEYS = {
     "challenge_1": ["metrics.max_elongation"],
     "challenge_2": [
         "metrics.minimum_normalized_magnetic_gradient_scale_length",
@@ -149,7 +149,7 @@ class ConstellarationDataLoader:
         dataset_type: str = "basic",
         grid_size: tuple = (64, 64, 64),
     ):
-        assert challenge in CHALLENGE_OUTPUTS, f"Unknown challenge: {challenge}"
+        assert challenge in CHALLENGE_KEYS, f"Unknown challenge: {challenge}"
         self.challenge = challenge
         self.val_size = val_size
         self.test_size = test_size
@@ -161,7 +161,7 @@ class ConstellarationDataLoader:
         self.grid_size = grid_size
 
         self.input_keys = INPUT_KEYS
-        self.output_keys = CHALLENGE_OUTPUTS[challenge]
+        self.output_keys = CHALLENGE_KEYS[challenge]
 
         self.train_dataset = None
         self.val_dataset = None
