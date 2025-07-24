@@ -30,6 +30,9 @@ The content is structured in multiple modules covering the following:
 - Module 4: Application of DoMINO to external aerodynamics simulations
   - Lab 1: Data pre-processing pipeline for DoMINO
   - Lab 2: Training and Inference recipe for DoMINO using PhysicsNeMo
+- Mini-Challenge
+  - Lab 1: Wave Equation Example
+  - Lab 2: Flow Over a Parameterized Block Example
 ## Tools and frameworks:
 
 The tools and frameworks used in the bootcamp are as follows:
