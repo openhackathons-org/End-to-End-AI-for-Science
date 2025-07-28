@@ -12,7 +12,7 @@ run-%:
 	--ulimit stack=67108864 \
 	--runtime nvidia \
 	-v ${PWD}:/workspace \
-	-v /home/carmelog/Projects/Docker/CommunityPhysics/TheWellMHDData:/workspace/TheWellMHDData \
+	-v ./TheWellMHDData:/workspace/TheWellMHDData \
 	--gpus device=1 \
 	--network="host" \
 	--rm $*
