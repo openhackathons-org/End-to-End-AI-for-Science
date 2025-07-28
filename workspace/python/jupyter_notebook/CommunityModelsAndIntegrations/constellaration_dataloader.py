@@ -270,38 +270,3 @@ class ConstellarationDataLoader:
                 num_workers=0,
             ),
         }
-
-
-# # Test both dataset types
-# print("=== Testing Basic Dataset ===")
-# basic_manager = ConstellarationDataLoader(
-#     challenge="challenge_3",
-#     dataset_type="basic",
-#     batch_size=2  # Smaller batch for testing
-# )
-# basic_manager.prepare()
-# basic_dataloaders = basic_manager.get_dataloaders()
-
-# for idx, batch in enumerate(basic_dataloaders["train"]):
-#     x, y = batch
-#     print(f"Basic - Input shape: {x.shape}")
-#     print(f"Basic - Target shape: {y.shape}")
-#     if idx >= 1:
-#         break
-
-# print("\n=== Testing Full Dataset (3D) ===")
-# full_manager = ConstellarationDataLoader(
-#     challenge="challenge_3",
-#     dataset_type="full",
-#     grid_size=(32, 32, 32),  # Smaller grid for testing
-#     batch_size=2  # Smaller batch for testing
-# )
-# full_manager.prepare()
-# full_dataloaders = full_manager.get_dataloaders()
-
-# for idx, batch in enumerate(full_dataloaders["train"]):
-#     x, y = batch
-#     print(f"Full - Input shape: {x.shape}")
-#     print(f"Full - Target shape: {y.shape}")
-#     if idx >= 1:
-#         break
