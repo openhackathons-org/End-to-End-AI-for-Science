@@ -15,7 +15,7 @@ run-%:
 	-v /home/carmelog/Projects/Docker/CommunityPhysics/TheWellMHDData:/workspace/TheWellMHDData \
 	--gpus device=1 \
 	--network="host" \
-	--rm -it $* /bin/bash
+	--rm $*
 
 clean-%:
 	docker rmi $*

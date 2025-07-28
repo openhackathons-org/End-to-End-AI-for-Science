@@ -310,7 +310,7 @@ class Trainer:
         with LaunchLogger(
             "mhd_pino",
             epoch=epoch,
-            mini_batch_log_freq=10,
+            mini_batch_log_freq=50,
             num_mini_batch=len(self.datamodule.train_dataloader()),
             epoch_alert_freq=1,
         ) as log:

@@ -50,7 +50,7 @@ model_params:
 ## Dataset options - use "The Well"
 dataset_params:
   _target_: the_well.data.WellDataModule
-  batch_size: 8
+  batch_size: 16
   # well_base_path: "hf://datasets/polymathic-ai/"
   well_base_path: ./TheWellMHDData/datasets
   well_dataset_name: MHD_64
