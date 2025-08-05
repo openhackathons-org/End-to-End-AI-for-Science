@@ -32,6 +32,11 @@ INPUT_KEYS = [
 
 
 class BasicConstellarationDataset(Dataset):
+    """This dataset concatenates the Fourier coefficients of the boundary,
+    as well as the metrics, into a single tensor. The specific keys are defined in
+    the INPUT_KEYS and CHALLENGE_KEYS variables.
+    """
+
     def __init__(self, examples, input_keys, output_keys, device=None):
         self.examples = examples
         input_keys = [k for k in input_keys if k != "boundary.json"]
@@ -67,6 +72,12 @@ class BasicConstellarationDataset(Dataset):
 
 
 class FullConstellarationDataset(Dataset):
+    """Similar to the BasicConstellarationDataset, but loads the full 3D volume.
+    The specific keys are defined in the INPUT_KEYS and CHALLENGE_KEYS variables.
+    The Fourier coefficients are used to create a 3D volume which is an appropriate
+    format for the pretrained TFNO model.
+    """
+
     def __init__(
         self, examples, input_keys, output_keys, device=None, grid_size=(64, 64, 64)
     ):
@@ -138,6 +149,13 @@ class FullConstellarationDataset(Dataset):
 
 
 class ConstellarationDataLoader:
+    """The dataloader class sets up train, validation and test splits using data
+    directly from the HuggingFace dataset. Depending on the challenge type, the
+    input and output keys are set. Note that in this dataset, the task is to map
+    the boundary to the metrics, and not the other way around. In the HuggingFace
+    challenge, user supplied boundary data is evaluated against the metrics.
+    """
+
     def __init__(
         self,
         challenge: str = "challenge_1",

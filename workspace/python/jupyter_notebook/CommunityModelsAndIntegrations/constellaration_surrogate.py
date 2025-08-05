@@ -3,6 +3,18 @@ import torch.nn as nn
 
 
 class TFNOSurrogate(nn.Module):
+    """The TFNO surrogate is comprised of three main components:
+    1. Input projection: 3D conv to project from input_channels to target_input_channels of the pretrained TFNO.
+    2. Output projection: 3D conv to project from target_output_channels to output_dim (3 by default)
+    3. Global pooling: 3D conv to project from target_output_channels to output_dim.
+       output_dim is 1 by default, and represents a single metric that we are predicting.
+
+    Note that the frozen TFNO surrogate model is trained on 3D simulation data for MHD equations.
+    The hope and goal of constructing this pipeline to map the boundary to the metrics is that we can
+    utilize the frozen TFNO surrogate model to approximate the equilibrium MHD fields, which then
+    can be used to compute the metrics of interest.
+    """
+
     def __init__(
         self,
         input_channels=3,
