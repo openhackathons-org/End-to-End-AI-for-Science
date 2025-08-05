@@ -1,0 +1,57 @@
+FROM nvidia/cuda:12.8.1-cudnn-devel-ubuntu24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update
+RUN apt-get autoremove -y
+RUN rm -rf /var/cache/apt/archives /var/lib/apt/lists/*
+
+RUN apt-get update && \
+    apt-get install -y apt-file \
+    vim \
+    wget \
+    git \
+    software-properties-common \
+    make \
+    g++ \
+    gcc \
+    curl \
+    gpg-agent && \
+    apt-get autoremove -y && \
+    apt-get clean && rm -rf /var/cache/apt/archives /var/lib/apt/lists/*
+
+RUN apt-get update -y
+RUN apt-get install -y libnetcdf-dev
+
+RUN apt-get update && apt-get install -y python3-pip
+RUN apt install python3.12-venv -y
+
+ARG RECOMPILE=1
+RUN groupadd -g 1111 docker && \
+    useradd -m -u 1111 -g docker dockeruser
+
+RUN python3 -m venv /venv
+
+ENV PATH=/venv/bin:$PATH
+RUN pip install --upgrade pip
+
+RUN pip install ruff isort black
+
+WORKDIR /workspace
+
+RUN pip install nvidia-physicsnemo
+RUN pip install cython
+RUN pip install nvidia-physicsnemo.sym --no-build-isolation
+
+## For the_well - standard install
+RUN pip install the_well[benchmark]
+
+RUN pip install -q datasets==3.5.1 constellaration==0.2.2
+
+#### Jupyter things
+RUN pip install jupyter
+
+USER dockeruser
+
+CMD ["jupyter", "notebook", "--ip=0.0.0.0", "--port=8889", "--no-browser", "--allow-root"]
+# jupyter notebook --ip=0.0.0.0 --port=8889 --no-browser --allow-root

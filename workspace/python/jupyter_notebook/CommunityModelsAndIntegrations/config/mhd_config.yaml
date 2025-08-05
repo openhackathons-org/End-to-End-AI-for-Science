@@ -1,0 +1,91 @@
+# SPDX-FileCopyrightText: Copyright (c) 2023 - 2024 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+## Training options
+load_ckpt: False
+use_wandb: False
+output_dir: './outputs'
+dummy_data: False
+training: True
+
+###################
+## Model options
+model_params:
+  coord_features: False
+  layers: 128
+  modes: 16
+  num_fno_layers: 1
+  fc_dim: 128
+  decoder_layers: 1
+  in_dim: 28 # Fields * n_steps_input
+  out_dim: 7 # number of fields * n_steps_output
+  # latent_channels: 256
+  dimension: 3
+  activation: 'gelu'
+  pad_x: 5
+  pad_y: 0
+  pad_z: 0
+
+  #TensorLy arguments
+  rank: 1.0
+  factorization: 'tucker'
+  fixed_rank_modes: null
+  decomposition_kwargs: {}
+
+###################
+## Dataset options - use "The Well"
+dataset_params:
+  _target_: the_well.data.WellDataModule
+  batch_size: 16
+  # well_base_path: "hf://datasets/polymathic-ai/"
+  well_base_path: ./TheWellMHDData/datasets
+  well_dataset_name: MHD_64
+  min_dt_stride: 1
+  max_dt_stride: 1
+  use_normalization: True
+  normalization_type:
+    _partial_: true
+    _target_: the_well.data.normalization.ZScoreNormalization
+  n_steps_input: 4
+  n_steps_output: 1
+
+
+###################
+## Dataloader options
+dataloader_params:
+  num_workers: 8
+
+###################
+## Optimizer options
+optimizer_params:
+  betas: [0.9, 0.999]
+  lr: 5.0e-4
+  milestones: [20, 40, 60, 80, 100]
+  gamma: 0.5
+
+
+###################
+## Train params
+train_params:
+  epochs: 10
+  ckpt_freq: 5
+  ckpt_path: 'outputs/checkpoints/'
+
+###################
+test:
+  batchsize: 1
+  ckpt_path: 'outputs/checkpoints/'
