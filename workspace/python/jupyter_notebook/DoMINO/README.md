@@ -11,30 +11,15 @@ For the sake of education here we will use only **Ahmed Body Surface data** for 
 
 ### 1. Setting your environment to pull the PhysicsNeMo container from NGC:
 
-1. Install NGC CLI:
-```bash
-wget https://ngc.nvidia.com/downloads/ngccli_linux.zip
-unzip ngccli_linux.zip
-chmod u+x ngc-cli/ngc
-mv ngc-cli/ngc /usr/local/bin
-```
-2. Authenticate with NGC:
-Go to `https://ngc.nvidia.com`, log in, and generate your API Key from your account settings.
-Then configure the CLI:
+Please refer to the following link for instructions on setting up your environment to pull the PhysicsNeMo container from NGC:
+https://docs.nvidia.com/launchpad/ai/base-command-coe/latest/bc-coe-docker-basics-step-02.html
 
-```bash
-ngc config set
-```
-when the config are set, check if your access works using:
 
-```bash
-ngc config current
-```
 ### Download Ahmed Body surface dataset
 
-The complete Ahmed body surface dataset is hosted on Google Drive and is accessible to NVIDIA internal users. If you are an external collaborator, please reach out to the NVIDIA development team to request access. To download the data, simply copy and paste the following link into your browser:
+The complete Ahmed body surface dataset is hosted on NGC and accessible from the following link:
 
-https://drive.google.com/uc?id=1KG9Vz0iepB-KyO44fRMeyf1RKoRSMdgE
+https://catalog.ngc.nvidia.com/orgs/nvidia/teams/physicsnemo/resources/physicsnemo_ahmed_body_dataset
 
 Then unzip the data and copy them where you can acccess it from the cotainer,e.g. `/workspace/data/`
 
@@ -48,12 +33,13 @@ Then unzip the data and copy them where you can acccess it from the cotainer,e.g
 └── validation_info
 ```
 
+Please note that the dataset contains VTP files, but training DoMINO and X-MeshGraphNet also requires STL files. Therefore, in the `domino-data-preprocessing.ipynb` notebook, STL files are extracted from the available VTP data.
 
 ### Runing PhysicsNeMo container using dokcer command
 
 Pull the PhysicsNeMo container with the following command:
 ```bash
-docker pull nvcr.io/nvidia/physicsnemo/physicsnemo:25.03
+docker pull nvcr.io/nvidia/physicsnemo/physicsnemo:25.06
  ```
 
 To launch the PhysicsNeMo container using docker, use the following command:
@@ -84,8 +70,6 @@ Execute these commands:
 cd /workspace/
 git clone https://github.com/NVIDIA/physicsnemo.git
 cd physicsnemo
-git checkout domino
-git branch -a
 rsync -av physicsnemo/* /usr/local/lib/python3.12/dist-packages/physicsnemo/
 ```
 
@@ -94,13 +78,13 @@ rsync -av physicsnemo/* /usr/local/lib/python3.12/dist-packages/physicsnemo/
 From the terminal inside the container run the following command to start Jupyter Lab in the background:
 
 ```bash
-nohup python3 -m jupyter lab --ip=0.0.0.0 --port=1234 --allow-root  --no-browser --NotebookApp.token='' --notebook-dir='/workspace/' --NotebookApp.allow_origin='*' > /dev/null 2>&1 &
+nohup python3 -m jupyter lab --ip=0.0.0.0 --port=7008 --allow-root  --no-browser --NotebookApp.token='' --notebook-dir='/workspace/' --NotebookApp.allow_origin='*' > /dev/null 2>&1 &
 ```
 
 Then from your labtop start a SSH tunnel using the host which your job is runing and the port which you assigned above `--port=1234`: 
 
 ```bash
-ssh -L 3030:eos0311:1234 eos
+ssh -L 3030:eos0311:7008 eos
 ```
 Access Jupyter Lab using `http://localhost:1234` in your browser. 
 
