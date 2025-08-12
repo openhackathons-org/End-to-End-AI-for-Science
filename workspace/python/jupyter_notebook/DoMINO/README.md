@@ -51,28 +51,6 @@ docker run --gpus 1  --shm-size=2g -p 7008:7008 --ulimit memlock=-1 --ulimit sta
 
 Make sure to replace <path_on_host> with the absolute path to the directory on the host system that contains your Jupyter notebooks and Ahmed Body surface data. This path will be mounted as `/workspace` inside the container, providing access to your data and scripts during the session
 
-
-### **Preparing the PhysicsNeMo Environment for DoMINO**
-
-Training the DoMINO architecture requires using a specific branch from the PhysicsNeMo GitHub repository. To ensure the correct code is used by Python, you need to clone the repository and copy its contents directly into your Python environment's installation directory (/usr/local/lib/python3.12/dist-packages/physicsnemo/). Use the following commands in your container:
-
-Follow these steps within your container to set up the PhysicsNeMo library for training the DoMINO architecture:
-
-- Navigate to your workspace directory.
-- Clone the PhysicsNeMo repository from GitHub.
-- Enter the cloned repository directory.
-- Switch to the domino branch.
-- (Optional) List all branches to confirm you are on the domino branch.
-- Copy the Python package files from the repository into your system's Python library path (/usr/local/lib/python3.12/dist-packages/physicsnemo/).
-
-Execute these commands:
-```bash
-cd /workspace/
-git clone https://github.com/NVIDIA/physicsnemo.git
-cd physicsnemo
-rsync -av physicsnemo/* /usr/local/lib/python3.12/dist-packages/physicsnemo/
-```
-
 ### start Jupyter Lab
 
 From the terminal inside the container run the following command to start Jupyter Lab in the background:
