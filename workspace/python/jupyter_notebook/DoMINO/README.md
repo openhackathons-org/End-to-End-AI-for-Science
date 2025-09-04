@@ -21,16 +21,20 @@ The complete Ahmed body surface dataset is hosted on NGC and accessible from the
 
 https://catalog.ngc.nvidia.com/orgs/nvidia/teams/physicsnemo/resources/physicsnemo_ahmed_body_dataset
 
-Then unzip the data and copy them where you can acccess it from the cotainer,e.g. `/workspace/data/`
+Then navigate to the directory `/workspace/physicsnemo_ahmed_body_dataset_vv1/dataset` and confirm that the data has been downloaded successfully.
 
 ```bash
-.
-├── test
-├── test_info
-├── train
-├── train_info
-├── validation
-└── validation_info
+physicsnemo_ahmed_body_dataset_vv1/dataset
+├── train/
+├── train_info/
+├── train_stl_files/
+├── validation/
+├── validation_info/
+├── validation_stl_files/
+├── test/
+├── test_info/
+├── test_stl_files/
+
 ```
 
 Please note that the dataset contains VTP files, but training DoMINO and X-MeshGraphNet also requires STL files. Therefore, in the `domino-data-preprocessing.ipynb` notebook, STL files are extracted from the available VTP data.
