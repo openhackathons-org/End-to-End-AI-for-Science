@@ -21,16 +21,20 @@ The complete Ahmed body surface dataset is hosted on NGC and accessible from the
 
 https://catalog.ngc.nvidia.com/orgs/nvidia/teams/physicsnemo/resources/physicsnemo_ahmed_body_dataset
 
-Then unzip the data and copy them where you can acccess it from the cotainer,e.g. `/workspace/data/`
+Then navigate to the directory `/workspace/physicsnemo_ahmed_body_dataset_vv1/dataset` and confirm that the data has been downloaded successfully.
 
 ```bash
-.
-├── test
-├── test_info
-├── train
-├── train_info
-├── validation
-└── validation_info
+physicsnemo_ahmed_body_dataset_vv1/dataset
+├── train/
+├── train_info/
+├── train_stl_files/
+├── validation/
+├── validation_info/
+├── validation_stl_files/
+├── test/
+├── test_info/
+├── test_stl_files/
+
 ```
 
 Please note that the dataset contains VTP files, but training DoMINO and X-MeshGraphNet also requires STL files. Therefore, in the `domino-data-preprocessing.ipynb` notebook, STL files are extracted from the available VTP data.
@@ -39,13 +43,13 @@ Please note that the dataset contains VTP files, but training DoMINO and X-MeshG
 
 Pull the PhysicsNeMo container with the following command:
 ```bash
-docker pull nvcr.io/nvidia/physicsnemo/physicsnemo:25.06
+docker pull nvcr.io/nvidia/physicsnemo/physicsnemo:25.08
  ```
 
 To launch the PhysicsNeMo container using docker, use the following command:
 
 ```bash
-docker run --gpus 1  --shm-size=2g -p 7008:7008 --ulimit memlock=-1 --ulimit stack=67108864 --runtime nvidia -v <path_on_host>:/workspace -it --rm $(docker images | grep 25.03| awk '{print $3}')
+docker run --gpus 1  --shm-size=2g -p 7008:7008 --ulimit memlock=-1 --ulimit stack=67108864 --runtime nvidia -v <path_on_host>:/workspace -it --rm $(docker images | grep 25.08| awk '{print $3}')
  
 ```
 
@@ -59,26 +63,26 @@ From the terminal inside the container run the following command to start Jupyte
 nohup python3 -m jupyter lab --ip=0.0.0.0 --port=7008 --allow-root  --no-browser --NotebookApp.token='' --notebook-dir='/workspace/' --NotebookApp.allow_origin='*' > /dev/null 2>&1 &
 ```
 
-Then from your labtop start a SSH tunnel using the host which your job is runing and the port which you assigned above `--port=1234`: 
+Then from your labtop start a SSH tunnel using the host which your job is runing and the port which you assigned above `--port=3030`: 
 
 ```bash
 ssh -L 3030:eos0311:7008 eos
 ```
-Access Jupyter Lab using `http://localhost:1234` in your browser. 
+Access Jupyter Lab using `http://localhost:3030` in your browser. 
 
 ### Dependencies
 
 Please install the following in the container.
 ```bash
 pip install numpy pyvista vtk matplotlib tqdm numpy-stl
+apt update
 apt install  xvfb
 ```
 
 ### Working with Jupyter Notebooks
 
-1. In Jupyter Lab, navigate to the `exercises` directory
-2. The notebooks are numbered in sequence (01-05). Start with `DLI_01.ipynb`
-3. Each notebook contains:
+1. In Jupyter Lab, there are two notebooks
+2. Each notebook contains:
    - Theory sections explaining the concepts
    - Code cells with detailed comments
    - Interactive visualizations
@@ -112,19 +116,11 @@ apt install  xvfb
 
 ### Common Issues
 
-1. **Jupyter Lab Not Starting**
-   - Check the SLURM job status: `squeue -u $USER`
-   - View job logs: `cat physicsnemo-aero-dli/.logs/start_nim_*.out`
-
-2. **NIM Server Issues**
-   - Verify server health: `curl http://localhost:8000/v1/health/ready`
-   - Check available models: `curl http://localhost:8000/v1/models`
-
-3. **Memory Issues**
+1. **Memory Issues**
    - Monitor GPU memory: `nvidia-smi`
    - Check system memory: `free -h`
 
-4. **GPU Support**
+2. **GPU Support**
 
    - Run the following command to verify your container runtime supports NVIDIA GPUs:
 
