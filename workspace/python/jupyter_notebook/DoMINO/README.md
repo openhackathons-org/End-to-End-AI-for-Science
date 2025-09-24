@@ -55,20 +55,43 @@ docker run --gpus 1  --shm-size=2g -p 7008:7008 --ulimit memlock=-1 --ulimit sta
 
 Make sure to replace <path_on_host> with the absolute path to the directory on the host system that contains your Jupyter notebooks and Ahmed Body surface data. This path will be mounted as `/workspace` inside the container, providing access to your data and scripts during the session
 
-### start Jupyter Lab
+### Start Jupyter Lab
 
-From the terminal inside the container run the following command to start Jupyter Lab in the background:
+
+To launch Jupyter Lab inside the container in the background, run the following command from the terminal inside of the container
+
 
 ```bash
 nohup python3 -m jupyter lab --ip=0.0.0.0 --port=7008 --allow-root  --no-browser --NotebookApp.token='' --notebook-dir='/workspace/' --NotebookApp.allow_origin='*' > /dev/null 2>&1 &
 ```
+### Accessing Jupyter Lab
+- If you're running the container on a remote host:
+    You need to set up SSH tunneling to access the Jupyter Lab interface from your local machine.
+    Assuming your container is running on host eos0311 and you used `--port=7008`, run the following command from your local laptop:
+    ```bash
+    ssh -L 3030:eos0311:7008 eos
+    ```
+    This creates a tunnel from your local port 3030 to port 7008 on the remote host.
+    After establishing the tunnel, open your browser and go to `http://localhost:3030` to access Jupyter Lab.
 
-Then from your labtop start a SSH tunnel using the host which your job is runing and the port which you assigned above `--port=3030`: 
+- If the container is running on your local machine:
+    You can access Jupyter Lab directly in your browser without SSH tunneling uisng `http://localhost:7008`
+
+### Cloning the Repository Containing the Notebooks
+
+At this point, you've launched the physicsNeMo container and started Jupyter Lab. Next, you need to clone the **End-to-End AI for Science** repository to access the notebooks.
+
+From the terminal inside the container, run the following command:
 
 ```bash
-ssh -L 3030:eos0311:7008 eos
+git clone https://github.com/openhackathons-org/End-to-End-AI-for-Science.git
 ```
-Access Jupyter Lab using `http://localhost:3030` in your browser. 
+Once cloned, navigate to the following directory to access the notebooks:
+
+```bash
+End-to-End-AI-for-Science/workspace/python/jupyter_notebook/DoMINO
+```
+You can now open the notebooks in Jupyter Lab and start exploring.
 
 ### Dependencies
 
@@ -78,15 +101,6 @@ pip install numpy pyvista vtk matplotlib tqdm numpy-stl
 apt update
 apt install  xvfb
 ```
-
-### Working with Jupyter Notebooks
-
-1. In Jupyter Lab, there are two notebooks
-2. Each notebook contains:
-   - Theory sections explaining the concepts
-   - Code cells with detailed comments
-   - Interactive visualizations
-   - Progress checkpoints to verify your understanding
 
 ## Course Modules
 
@@ -145,11 +159,10 @@ Expected output should show your GPU information, for example:
 
 ## Additional Resources
 
-- [NVIDIA Physics NeMo Documentation](https://docs.nvidia.com/deeplearning/nemo-physics/user-guide)
+- [NVIDIA Physics NeMo Documentation](https://docs.nvidia.com/physicsnemo/index.html)
 - [PyVista Documentation](https://docs.pyvista.org/) for 3D visualization
 - [Ahmed Body Benchmark](https://www.cfd-online.com/Wiki/Ahmed_body) for background
-- [Physics-Informed Neural Networks](https://www.sciencedirect.com/science/article/abs/pii/S0021999118307125) paper
-- [Graph Neural Networks](https://arxiv.org/abs/2106.10943) for scientific computing
 - [Neural Operators](https://arxiv.org/abs/2108.08481) for PDEs
+- [DoMINO Paper](https://arxiv.org/abs/2501.13350) for DoMINO paper
 - [DGL Documentation](https://www.dgl.ai/) for graph neural networks
 - [Triton Inference Server](https://github.com/triton-inference-server/server) for deployment
