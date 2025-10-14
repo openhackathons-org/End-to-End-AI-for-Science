@@ -19,6 +19,10 @@ from physicsnemo.launch.utils import save_checkpoint
 from physicsnemo.utils.sdf import signed_distance_field
 from physicsnemo.utils.domino.utils import *
 from physicsnemo.distributed import DistributedManager
+import glob
+from collections import defaultdict
+
+
 
 vtk.vtkObject.GlobalWarningDisplayOff()
 os.environ["NO_AT_BRIDGE"] = "1"
@@ -224,4 +228,141 @@ def save_predictions_to_vtp(polydata, prediction, var_names, output_path):
 
     polydata.save(output_path)
     print(f"Predictions saved to {output_path}")
+
+
+
+#### utiles fucntion for Domino data preprocessing
+import glob
+
+def analyze_and_plot_distribution(data_array, field_name):
+    """
+    Calculates statistics and plots the distribution for a given 1D data array.
+
+    Args:
+        data_array (np.ndarray): A NumPy array of scalar values.
+        field_name (str): The name of the field being analyzed (e.g., "Temperature").
+    """
+    if data_array.size == 0:
+        print(f"\n--- No data found for '{field_name}'. Skipping analysis. ---\n")
+        return
+
+    # Ensure data_array is a flat 1D array for analysis
+    data_array = data_array.flatten()
+
+    print(f"\n{'---'*5} Analysis for: {field_name.upper()} {'---'*5}")
+    print(f"Shape of aggregated data: {data_array.shape}")
+    print(f"Total values calculated: {len(data_array)}")
+
+    # Basic statistics
+    print(
+        f"Statistics:\n  Min: {data_array.min():.4f}\n  Max: {data_array.max():.4f}\n  Mean: {data_array.mean():.4f}\n  Std Dev: {data_array.std():.4f}"
+    )
+
+    # Calculate and print percentile distribution
+    print("\n--- Percentile Distribution ---")
+    percentiles = [1, 5, 25, 50, 75, 95, 99]
+    percentile_values = np.percentile(data_array, percentiles)
+    for p, v in zip(percentiles, percentile_values):
+        print(f"  {p:2d}th percentile: {v:.4f}")
+    print("***************************************\n")
+
+    # Plotting
+    plt.style.use("seaborn-v0_8-whitegrid")
+    fig, (ax1, ax2) = plt.subplots(
+        2, 1, figsize=(12, 10), gridspec_kw={"height_ratios": [3, 1]}
+    )
+    fig.suptitle(f"Distribution for {field_name}", fontsize=20, y=0.98)
+
+    # Plot 1: Histogram
+    ax1.hist(data_array, bins=100, color="skyblue", edgecolor="black", alpha=0.8)
+    ax1.set_title("Histogram")
+    ax1.set_xlabel(field_name)
+    ax1.set_ylabel("Frequency")
+    ax1.set_yscale("log") # Log scale is often useful for distributions
+    ax1.grid(True, which="both", linestyle='--', linewidth=0.5)
+
+    # Plot 2: Box plot
+    ax2.boxplot(
+        data_array,
+        vert=False,
+        whis=[5, 95], # Whiskers at 5th and 95th percentiles
+        patch_artist=True,
+        boxprops=dict(facecolor="lightgreen"),
+        flierprops=dict(marker="o", markerfacecolor="red", markersize=5, alpha=0.3),
+    )
+    ax2.set_title("Box Plot")
+    ax2.set_xlabel(field_name)
+    ax2.set_yticks([]) # Hide y-axis ticks
+    ax2.grid(True, linestyle='--', linewidth=0.5)
+
+    fig.tight_layout(rect=[0, 0.03, 1, 0.95])
+    plt.show()
+
+
+def process_and_plot_directory(data_dir):
+    """
+    Loads all .npy files from a directory, automatically detects arrays and their
+    shapes, aggregates the data, and plots a histogram for each field.
+    """
+    file_paths = glob.glob(os.path.join(data_dir, "*.npy"))
+
+    if not file_paths:
+        print(f"Error: No .npy files found in the directory '{data_dir}'.")
+        return
+
+    # Use a defaultdict to automatically handle new keys for aggregated data
+    aggregated_data = defaultdict(list)
+
+#    print(f"Found {len(file_paths)} files. Starting processing...")
+
+    for file_path in file_paths:
+        try:
+            # Assumes the .npy file contains a dictionary of arrays
+            data_dict = np.load(file_path, allow_pickle=True).item()
+
+            for key, array in data_dict.items():
+                if not isinstance(array, np.ndarray):
+                   # print(f"Warning: Item '{key}' in {os.path.basename(file_path)} is not a NumPy array. Skipping.")
+                    continue
+
+#                print(f"Processing key '{key}' with shape {array.shape} from {os.path.basename(file_path)}")
+#
+                # 1D arrays
+                if array.ndim == 1:
+                    aggregated_data[key].extend(array)
+
+                # 2D arrays: treat each column as a separate field
+                elif array.ndim == 2:
+                    num_cols = array.shape[1]
+                    for i in range(num_cols):
+                        col_name = f"{key}_col_{i}"
+                        aggregated_data[col_name].extend(array[:, i])
+
+                    #  handling velocity magnitude
+                    # If the key suggests velocity and there are at least 3 columns
+                    if ('velo' in key.lower() or 'field' in key.lower()) and num_cols >= 3:
+                         # Assume first 3 columns are U, V, W
+                        velocities = array[:, :3]
+                        magnitudes = np.linalg.norm(velocities, axis=1)
+                        aggregated_data[f"{key}_Magnitude"].extend(magnitudes)
+
+                else:
+                    print(f"Warning: Array '{key}' has an unsupported dimension {array.ndim}. Skipping.")
+
+        except Exception as e:
+            print(f"Error loading or processing file {os.path.basename(file_path)}: {e}")
+
+    print("\n--- All files processed. Generating plots for aggregated data. ---\n")
+
+    # --- Analyze and plot each collected field ---
+    if not aggregated_data:
+        print("No valid data was aggregated. Exiting.")
+        return
+
+    for field_name, data_list in aggregated_data.items():
+        # Convert list to a NumPy array for analysis
+        data_array = np.array(data_list)
+        analyze_and_plot_distribution(data_array, field_name)
+
+
 
