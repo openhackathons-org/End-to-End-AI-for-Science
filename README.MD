@@ -30,6 +30,11 @@ The content is structured in multiple modules covering the following:
 - Module 4: Application of DoMINO to external aerodynamics simulations
   - Lab 1: Data pre-processing pipeline for DoMINO
   - Lab 2: Training and Inference recipe for DoMINO using PhysicsNeMo
+- Module 5: From Transformer theory to Transolver, a new approach for large-scale physics simulations
+  - Lab 1: The “Why”: Introduces standard Transformer attention and its quadratic complexity. Explains why this bottleneck makes it impractical for large-scale physics meshes.
+  - Lab 2: The “How”: Presents a NumPy blueprint of Physics-Attention using the Slice–Aggregate–Attend–Deslice workflow. Shows how learnable slices enable attention over physics-aware tokens.
+  - Lab 3: The “Factory”: Builds a full training pipeline with Physics-NEMO and provided scripts. Preprocesses  VTP/STL files (Ahmed body Surface Data), computes normalization statistics, and runs a short training loop.
+
 ## Tools and frameworks:
 
 The tools and frameworks used in the bootcamp are as follows:
