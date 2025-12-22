@@ -10,7 +10,7 @@ This series is broken into three notebooks, each building on the last:
 
 * **Notebook 2 (The "How"):** We'll build a `NumPy` "blueprint" of the Transolver solution: **Physics-Attention**. We will implement the 4-step mathematical process (Slice, Aggregate, Attend, Deslice) that breaks this bottleneck. This notebook will explain the *internal mechanics* of how Transolver learns "intrinsic physical states" by grouping mesh points into "learnable slices" and performing attention on a few "physics-aware tokens".
 
-* **Notebook 3 (The "Factory"):** We'll move from blueprint to reality. We will use the official **Physics-NEMO** library and your provided Python scripts (`datapipe.py`, `preprocess.py`, etc.) to build a complete, professional-grade training pipeline. We will preprocess your 508 VTP/STL files into the Zarr format, calculate the necessary normalization statistics, and run an (abbreviated) training loop for a few epochs to see it all work.
+* **Notebook 3 (The "Factory"):** We'll move from blueprint to reality. We will use the official **PhysicsNeMo** library and your provided Python scripts (`datapipe.py`, `preprocess.py`, etc.) to build a complete, professional-grade training pipeline. We will preprocess your 508 VTP/STL files into the Zarr format, calculate the necessary normalization statistics, and run an (abbreviated) training loop for a few epochs to see it all work.
 
 ---
 
