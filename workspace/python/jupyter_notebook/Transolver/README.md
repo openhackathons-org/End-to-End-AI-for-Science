@@ -1,16 +1,32 @@
 # Transolver Tutorial: From Theory to Training
 
-Welcome to this tutorial series!
+Welcome to this tutorial series! This hands-on guide explores the transition from standard Transformer theory to **Transolver**, a state-of-the-art AI model designed to predict how physical systems behave in the real world.
 
-In this series, we’ll go from Transformer theory to Transolver, a new approach for large-scale physics simulations. The goal is to build a complete, end-to-end understanding, from the fundamental concepts to a real, working training pipeline.
+Our goal is to bridge the gap between abstract AI concepts and a production-ready simulation pipeline. You will learn how to build a system that can understand the complex physical laws governing objects with irregular, real-world shapes.
 
-This series is broken into three notebooks, each building on the last:
+### Based on the Paper:
+> **Transolver: A Fast Transformer Solver for PDEs on General Geometries** > *(Wu et al., 2024, [arXiv:2402.02366v2](https://arxiv.org/abs/2402.02366))*
 
-* **Notebook 1 (The "Why"):** We will start by exploring the core "attention" mechanism of a standard Transformer. We will then discover its critical flaw: the "quadratic complexity" ($O(N^2)$). You will see why this "quadratic bottleneck" makes it "computationally prohibited" for the "large-scale meshes" used in real-world physics.
+---
 
-* **Notebook 2 (The "How"):** We'll build a `NumPy` "blueprint" of the Transolver solution: **Physics-Attention**. We will implement the 4-step mathematical process (Slice, Aggregate, Attend, Deslice) that breaks this bottleneck. This notebook will explain the *internal mechanics* of how Transolver learns "intrinsic physical states" by grouping mesh points into "learnable slices" and performing attention on a few "physics-aware tokens".
+## Series Overview
 
-* **Notebook 3 (The "Factory"):** We'll move from blueprint to reality. We will use the official **PhysicsNeMo** library and your provided Python scripts (`datapipe.py`, `preprocess.py`, etc.) to build a complete, professional-grade training pipeline. We will preprocess your 508 VTP/STL files into the Zarr format, calculate the necessary normalization statistics, and run an (abbreviated) training loop for a few epochs to see it all work.
+This series is broken into three sequential notebooks, each building the foundation for the next:
+
+### 1. The "Why" – The Quadratic Bottleneck
+We begin by exploring the core **attention mechanism** of the standard Transformer. While powerful, you will discover its critical limitation: **quadratic complexity ($O(N^2)$)**. We demonstrate why this "bottleneck" makes standard Transformers too slow and memory-heavy for the massive, detailed 3D models used in real-world engineering.
+
+### 2. The "How" – Physics-Attention Mechanics
+In this module, we build a **NumPy "blueprint"** of the Transolver solution: **Physics-Attention**. You will implement the four-step mathematical process—**Slice, Aggregate, Attend, and Deslice**—that solves the speed problem.
+
+* **Key Learning:** Understand how Transolver learns "hidden physical states" by grouping millions of data points into a few "physics-aware tokens," allowing the model to focus only on the most important information.
+
+### 3. The "Factory" – Building the Pipeline
+We transition from theory to a professional-grade implementation using the **PhysicsNeMo** library. Using the provided Python utility scripts (`datapipe.py`, `preprocess.py`, etc.), we construct a complete end-to-end pipeline:
+
+* **Data Preparation:** Transform 508 3D simualtions (VTP/STL) into the high-performance Zarr format.
+* **Optimization:** Calculate the necessary statistics to ensure the model learns effectively.
+* **Execution:** Run an abbreviated training loop to see the Transolver architecture in action on real-world data.
 
 ---
 
