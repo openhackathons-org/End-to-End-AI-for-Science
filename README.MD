@@ -34,6 +34,12 @@ The content is structured in multiple modules covering the following:
   - Lab 1: The “Why”: Introduces standard Transformer attention and its quadratic complexity. Explains why this bottleneck makes it impractical for large-scale physics meshes.
   - Lab 2: The “How”: Presents a NumPy blueprint of Physics-Attention using the Slice–Aggregate–Attend–Deslice workflow. Shows how learnable slices enable attention over physics-aware tokens.
   - Lab 3: The “Factory”: Builds a full training pipeline with PhysicsNeMo and provided scripts. Preprocesses  VTP/STL files (Ahmed body Surface Data), computes normalization statistics, and runs a short training loop.
+- Module 6: From Transolver to GeoTransolver – Bridging Geometry and Physics with GALE
+  - Lab 1: The "Geometry Bridge": Understanding representation drift, the GALE mechanism, 
+           and multi-scale geometry conditioning through interactive visualization.
+  - Lab 2: The "Pipeline": Training GeoTransolver on automotive aerodynamics datasets 
+           using PhysicsNeMo (will be added soon).
+
 
 ## Tools and frameworks:
 
