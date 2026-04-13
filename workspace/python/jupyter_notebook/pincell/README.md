@@ -6,7 +6,7 @@ This repository provides the code that accompanies [this technical blog](). This
 | -------- | ------- |
 | [1. Dataset generation](1-dataset-generation.ipynb) | Employ Latin hypercube sampling to generate a diverse dataset of reactor pin cells for model training. Sampled designs are simulated using [`OpenMC`](https://openmc.org/), and the corresponding neutron flux field and homogenised cross-section value is recorded as the output. |
 | [2. Feature-based regression](2-feature-based-regression.ipynb) | Establish a **baseline predictive model**: a feature-based regression model - specifically, a gradient boosting regressor. The baseline model directly predicts the scalar homogenised cross-section from a set of scalar descriptors capturing the key geometric features and material parameters of a pin-cell. |
-| [3. Fourier neural operator](3-fourier-neural-operator.ipynb) | Train and evaluate a Fourier Neural Operator (FNO) using [`physicsnemo`](https://github.com/NVIDIA/physicsnemo). Demonstrate improved performance over the baseline model through a two-step, physics-aligned approach: first predict the neutron flux field using the FNO, then compute the homogenised cross-section from the predicted flux. |
+| [3. Fourier neural operator](3-fourier-neural-operator.ipynb) | Train and evaluate a Fourier Neural Operator (FNO) using [`physicsnemo`](https://github.com/NVIDIA/physicsnemo). Demonstrate improved performance over the baseline model through a two-step, physics-aligned approach: first predict the neutron flux and absorption cross-section field using a multi-output FNO, then compute the homogenised cross-section from the predicted fields. |
 
 ## Getting started
 
