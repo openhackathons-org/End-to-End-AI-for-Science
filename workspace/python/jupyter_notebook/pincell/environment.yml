@@ -1,0 +1,13 @@
+name: ai-for-science
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - jupyterlab
+  - openmc
+  - pandas
+  - numpy
+  - scikit-learn
+  - pytorch
+  - tensorboard
+  - pip
