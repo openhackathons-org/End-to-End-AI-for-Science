@@ -1,0 +1,17 @@
+model_name: diffusion
+regression_weights: null
+regression_conditions: []
+diffusion_conditions:
+- state
+- background
+- invariant
+spatial_pos_embed: false
+hyperparameters:
+  channel_mult:
+  - 1
+  - 2
+  - 2
+  num_blocks: 2
+  model_channels: 64
+  checkpoint_level: 0
+  attn_resolutions: []

@@ -1,0 +1,12 @@
+pyproj
+torch-optimi
+matplotlib 
+cartopy 
+omegaconf 
+hydra-core 
+wandb 
+tensorboard 
+nvtx 
+termcolor 
+scipy 
+setuptools==81.0.0

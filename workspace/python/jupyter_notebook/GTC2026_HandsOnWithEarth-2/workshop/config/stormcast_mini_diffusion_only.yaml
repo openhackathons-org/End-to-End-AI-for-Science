@@ -1,0 +1,38 @@
+defaults:
+- dataset/hrrr_era5_mini
+- model/stormcast_mini
+- training/default
+- sampler/edm_deterministic
+- hydra/default
+- _self_
+training:
+  outdir: /output/rundir
+  experiment_name: stormcast
+  run_id: mini
+  batch_size: 64
+  lr: 0.001
+  total_train_steps: 20000
+  lr_rampup_steps: 500
+  log_to_tensorboard: true
+  checkpoint_freq: 500
+  validation_freq: 500
+  validation_plot_variables:
+  - u10m
+  - v10m
+  - t2m
+  validation_plot_background_variables:
+  - u10m
+  - v10m
+  - t2m
+  perf:
+    fp_optimizations: amp-bf16
+    use_apex_gn: true
+  loss:
+    type: edm
+    sigma_distribution: loguniform
+    sigma_min: 0.001
+    sigma_max: 800
+    sigma_data: 0.5
+validation:
+  era5_path: /data/era5/val/2025.zarr
+  hrrr_path: /data/hrrr/val/2025.zarr

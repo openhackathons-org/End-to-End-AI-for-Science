@@ -1,0 +1,16 @@
+name: data_loader_hrrr_era5_mini.HrrrEra5DatasetMini
+era5_path: /data/era5/train/2024.zarr
+hrrr_path: /data/hrrr/train/2024.zarr
+invariants_path: /data/hrrr/invariants.zarr
+era5_stats_path: /data/era5/stats
+hrrr_stats_path: /data/hrrr/stats
+dt: 1
+era5_channels: all
+hrrr_channels:
+- u10m
+- v10m
+- t2m
+invariants:
+- lsm_mean
+- elev_mean
+- elev_std
