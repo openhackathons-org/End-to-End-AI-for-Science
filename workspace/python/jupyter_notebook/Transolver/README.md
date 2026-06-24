@@ -1,4 +1,4 @@
-# Transolver & GeoTransolver Tutorial: From Theory to Training
+# Transolver & GeoTransolver Tutorial: From Theory to Training + UQ
 
 Welcome to this tutorial series! This hands-on guide walks through the journey from standard Transformer theory to **Transolver** and **GeoTransolver** — state-of-the-art AI surrogate models for predicting physical fields on complex 3D geometries.
 
@@ -16,7 +16,7 @@ Our goal is to bridge the gap between abstract AI concepts and a production-read
 
 ## Series Overview
 
-The series consists of six notebooks. **Run Notebook 0 once** before the training notebooks — it produces the Zarr dataset and normalization file that Notebooks 3 and 5 both share.
+The series consists of seven notebooks. **Run Notebook 0 once** before the training notebooks — it produces the Zarr dataset and normalization file that Notebooks 3 and 5 both share.
 
 | # | Notebook | Topic |
 |---|----------|-------|
@@ -26,6 +26,7 @@ The series consists of six notebooks. **Run Notebook 0 once** before the trainin
 | 3 | Training Transolver | `TransolverDataPipe` training loop, slice visualization |
 | 4 | Understanding GALE & GeoTransolver | Geometry-Aware Layer Ensemble and how it extends Transolver |
 | 5 | Training GeoTransolver | Same pipeline as NB3, `broadcast_global_features=False`, GALE |
+| 6 | Uncertainty Quantification | MC-Dropout & Concrete Dropout for per-point epistemic uncertainty |
 
 ---
 
@@ -71,6 +72,18 @@ We examine the **Geometry-Aware Layer Ensemble (GALE)** — a cross-attention me
 - Why geometry context fades in deep networks and why GALE is needed
 - How GALE cross-attention works mathematically
 - The full architectural difference between Transolver and GeoTransolver
+
+### Notebook 6 — Uncertainty Quantification
+
+Adds per-point epistemic confidence estimates to the trained Transolver (or GeoTransolver) without retraining from scratch.
+
+**MC-Dropout:** enable dropout at inference time (`enable_dropout(model)`), run T stochastic forward passes, compute per-point mean and standard deviation. Backed by Gal & Ghahramani's result that dropout networks approximate Bayesian inference over model weights.
+
+**Concrete Dropout:** treat the dropout probability *p* as a learnable parameter. A KL-based regularization term (Bernoulli entropy + weight-norm penalty) is added to the training loss, allowing the model to discover the optimal *p* per layer rather than relying on manual tuning.
+
+The two methods compose: train with Concrete Dropout (learned *p*), then run MC-Dropout at inference with those learned *p* values. The resulting per-point σ map highlights trailing edges, slant junctions, and underbody corners — exactly the regions where CFD verification is most needed.
+
+---
 
 ### Notebook 5 — Training GeoTransolver
 
@@ -191,6 +204,7 @@ Transolver/
 ├── Notebook3-Training-Transolver.ipynb
 ├── Notebook4-Understanding-GALE-GeoTransolver.ipynb
 ├── Notebook5-Training-GeoTransolver.ipynb
+├── Notebook6-Uncertainty-Quantification.ipynb   ← MC-Dropout & Concrete Dropout
 ├── requirements.txt          # Python dependencies (see Step 3)
 ├── utils/                    # shared utility modules
 └── fig/                      # figures referenced in the notebooks
@@ -201,6 +215,8 @@ Transolver/
 ## References
 
 - Wu, H., et al. (2024). *Transolver: A Fast Transformer Solver for PDEs on General Geometries.* [arXiv:2402.02366](https://arxiv.org/abs/2402.02366)
+- Gal, Y. & Ghahramani, Z. (2016). *Dropout as a Bayesian Approximation.* ICML 2016.
+- Gal, Y., Hron, J., & Kendall, A. (2017). *Concrete Dropout.* NeurIPS 2017.
 - NVIDIA PhysicsNeMo: [https://github.com/NVIDIA/physicsnemo](https://github.com/NVIDIA/physicsnemo)
 - Ahmed Body Example: [`examples/cfd/external_aerodynamics/transformer_models`](https://github.com/NVIDIA/physicsnemo/tree/main/examples/cfd/external_aerodynamics/transformer_models)
 - PhysicsNeMo 26.05 Container: `nvcr.io/nvidia/physicsnemo/physicsnemo:26.05`
