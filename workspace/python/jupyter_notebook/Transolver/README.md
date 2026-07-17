@@ -139,7 +139,7 @@ physicsnemo_ahmed_body_dataset_vv1/dataset/
 ### Step 1 — Pull the PhysicsNeMo 26.05 Container
 
 ```bash
-docker pull nvcr.io/nvidia/physicsnemo/physicsnemo:26.05
+docker pull nvcr.io/nvidia/physicsnemo/physicsnemo:26.06
 ```
 
 ### Step 2 — Launch the Container
@@ -152,7 +152,7 @@ docker run --gpus 1 --shm-size=2g -p 7008:7008 \
     --runtime nvidia \
     -v <path_on_host>:/workspace \
     -it --rm \
-    nvcr.io/nvidia/physicsnemo/physicsnemo:26.05
+    nvcr.io/nvidia/physicsnemo/physicsnemo:26.06
 ```
 
 ### Step 3 — Install Additional Dependencies (Inside Container)
@@ -163,8 +163,7 @@ docker run --gpus 1 --shm-size=2g -p 7008:7008 \
 apt-get update && apt-get install -y rsync xvfb
 
 # Python packages
-pip install hydra-core tabulate tensorboard termcolor torchinfo einops \
-    "transformer_engine[pytorch]" "zarr>=3.0"
+pip install hydra-core tabulate tensorboard termcolor torchinfo einops
 ```
 
 ### Step 4 — Start Jupyter Lab
@@ -218,5 +217,5 @@ Transolver/
 - Gal, Y. & Ghahramani, Z. (2016). *Dropout as a Bayesian Approximation.* ICML 2016.
 - Gal, Y., Hron, J., & Kendall, A. (2017). *Concrete Dropout.* NeurIPS 2017.
 - NVIDIA PhysicsNeMo: [https://github.com/NVIDIA/physicsnemo](https://github.com/NVIDIA/physicsnemo)
-- Ahmed Body Example: [`examples/cfd/external_aerodynamics/transformer_models`](https://github.com/NVIDIA/physicsnemo/tree/main/examples/cfd/external_aerodynamics/transformer_models)
+- External aerodynamcs recipe in PhysicsNeMo: [`examples/cfd/external_aerodynamics/transformer_models`](https://github.com/NVIDIA/physicsnemo/tree/main/examples/cfd/external_aerodynamics/transformer_models)
 - PhysicsNeMo 26.05 Container: `nvcr.io/nvidia/physicsnemo/physicsnemo:26.05`
