@@ -30,15 +30,32 @@ The content is structured in multiple modules covering the following:
 - Module 4: Application of DoMINO to external aerodynamics simulations
   - Lab 1: Data pre-processing pipeline for DoMINO
   - Lab 2: Training and Inference recipe for DoMINO using PhysicsNeMo
-- Module 5: From Transformer theory to Transolver, a new approach for large-scale physics simulations
-  - Lab 1: The “Why”: Introduces standard Transformer attention and its quadratic complexity. Explains why this bottleneck makes it impractical for large-scale physics meshes.
-  - Lab 2: The “How”: Presents a NumPy blueprint of Physics-Attention using the Slice–Aggregate–Attend–Deslice workflow. Shows how learnable slices enable attention over physics-aware tokens.
-  - Lab 3: The “Factory”: Builds a full training pipeline with PhysicsNeMo and provided scripts. Preprocesses  VTP/STL files (Ahmed body Surface Data), computes normalization statistics, and runs a short training loop.
-- Module 6: From Transolver to GeoTransolver – Bridging Geometry and Physics with GALE
-  - Lab 1: The "Geometry Bridge": Understanding representation drift, the GALE mechanism, 
-           and multi-scale geometry conditioning through interactive visualization.
-  - Lab 2: The "Pipeline": Training GeoTransolver on automotive aerodynamics datasets 
-           using PhysicsNeMo (will be added soon).
+- Module 5: From Transformer Theory to GeoTransolver — Physics-Aware AI for Large-Scale CFD
+  - Lab 0 (Notebook 0): **Data Preprocessing** — Converts raw Ahmed body VTP/STL surface meshes
+    to Zarr format, computes per-field normalization statistics, and validates the dataset
+    structure required by all subsequent notebooks.
+  - Lab 1 (Notebook 1): **Why Standard Transformers Fail at Scale** — Derives the O(N²) memory
+    and compute bottleneck of standard self-attention from first principles. Demonstrates it
+    concretely on Ahmed body pressure fields and explains why this makes large physics meshes
+    intractable.
+  - Lab 2 (Notebook 2): **How Physics-Attention Solves It** — Builds a NumPy blueprint of the
+    Slice–Aggregate–Attend–Deslice pipeline, showing how learnable physics slices reduce
+    complexity from O(N²) to O(N). Includes a corrected aggregation derivation and a full
+    complexity comparison table.
+  - Lab 3 (Notebook 3): **Training Transolver** — Constructs a complete training loop using
+    PhysicsNeMo's `TransolverDataPipe`. Covers mixed-precision training, OneCycleLR scheduling,
+    checkpoint management, and post-training visualization of learned ascription weights and
+    per-point slice entropy.
+  - Lab 4 (Notebook 4): **From Transolver to GeoTransolver — the GALE Mechanism** — Explains
+    representation drift and how Geometry-Aware Latent Embeddings (GALE) provide a persistent
+    geometry context at every layer via a learned gating parameter α. Includes interactive
+    visualization of the cross-attention geometry recall.
+  - Lab 5 (Notebook 5): **Training GeoTransolver** — End-to-end training of GeoTransolver on
+    the Ahmed body dataset. Highlights the differences from Lab 3: geometry tensor injection,
+    GALE cross-attention blocks, and the extended `make_datapipe_geo` pipeline.
+  - Lab 6 (Notebook 6): **Uncertainty Quantification** — Estimates prediction confidence using
+    MC-Dropout and ensemble methods, producing per-point uncertainty maps over the Ahmed body
+    surface fields.
 - Earth-2 workshops presented at GTC
   - GTC 2025: Running AI weather inference with Earth2Studio
   - GTC 2026: Training AI weather models with PhysicsNeMo
