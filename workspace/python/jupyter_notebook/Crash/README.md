@@ -419,15 +419,17 @@ torchrun --nproc_per_node=4 train.py --config-name=bumper_geotransolver_oneshot
 **Expected result.** One-shot and time-conditional converge to validation MSE in the
 `10⁻³` range; AR-rollout degrades over the rollout horizon.
 
-> **On the numbers you will see.** If no checkpoints are present, Section 8 populates the
-> comparison metrics from the published benchmark ([arXiv:2510.15201](https://arxiv.org/abs/2510.15201))
-> and Section 14's loss curves are synthetic. This lets you work through the analysis sections
-> without a multi-hour training run first — but the plots are illustrative until you train and
-> point `CKPT_DIR` at your own checkpoints.
+> **On the numbers you will see.** With no checkpoints present, Section 8 fills the comparison
+> metrics with **illustrative placeholders** and Section 14's loss curves are synthetic. This
+> lets you walk the analysis sections without a multi-hour training run first — but those
+> figures are demonstrations of the *plotting*, not results. Train and point `CKPT_DIR` at your
+> own checkpoints before drawing any conclusion.
+>
+> The related published study ([arXiv:2510.15201](https://arxiv.org/abs/2510.15201)) evaluates
+> MeshGraphNet and Transolver on a **Body-in-White** dataset (150 simulations, 200+ components).
+> It reports no bumper-beam comparison, so its figures do not carry over to this series.
 
-Teacher forcing is discussed in Crash-1 but not trained here. Crash-1's comparison table gives
-it validation MSE ≈ 0.3 against one-shot's 5.42 × 10⁻³ — roughly 55× worse, the clearest
-illustration in the series of train/test distribution mismatch.
+Teacher forcing is described in Crash-1 but not trained here.
 
 **Runtime:** ~30 min to walk through with simulated/pre-trained metrics; 2–4 h if you train from scratch.
 
