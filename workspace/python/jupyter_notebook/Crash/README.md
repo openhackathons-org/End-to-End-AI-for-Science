@@ -497,47 +497,6 @@ way it is, which makes Crash-0's preprocessing choices much less arbitrary.
 
 ---
 
-## Repository Layout
-
-```
-Transolver/
-│
-├── README_Crash.md                                 ← this file (crash series)
-├── README.md                                       ← Ahmed body CFD series (separate track)
-│
-│   ── Crash series ──
-├── Notebook_Crash_SimGen-OpenRadioss.ipynb         ← optional dataset generation
-├── Notebook_Crash_SimGen-OpenRadioss_run_on_cluster.ipynb   ← reference copy with saved outputs
-├── Notebook_Crash0-Data-Preprocessing.ipynb
-├── Notebook_Crash1-Architecture-and-Concepts.ipynb
-├── Notebook_Crash2-Training-Integration-Comparison.ipynb
-│
-│   ── Ahmed body CFD series (not part of this track) ──
-├── Notebook0-Data-Preprocessing.ipynb
-├── Notebook1-Understanding-Transformers-and-Bottleneck.ipynb
-├── Notebook2-Understanding-Transolver.ipynb
-├── Notebook3-Training-Transolver.ipynb
-├── Notebook4-Understanding-GALE-GeoTransolver.ipynb
-├── Notebook5-Training-GeoTransolver.ipynb
-├── Notebook6-Uncertainty-Quantification.ipynb
-├── requirements.txt
-├── utils/  fig/  *.pptx  patch_*.py
-│
-└── data/                                           ← created as you work
-    ├── bumperbeam_openradioss/RAW_DATA/Run*/       ← Crash-Sim output (input to Crash-0)
-    └── bumperbeam_zarr/
-        ├── train/Run*.zarr/                        ← after Crash-0 Section 6.2
-        └── val/Run*.zarr/
-```
-
-**About the cluster copy.** `Notebook_Crash_SimGen-OpenRadioss_run_on_cluster.ipynb` preserves
-cell outputs from a real DGX run — useful for seeing what correct solver output looks like
-without running the simulations. It is an *earlier snapshot* (31 cells vs 38): it lacks the
-Series/Pipeline overview cells and the Section 13 visualization, and its section numbering
-diverges after Section 12. Use the main notebook to actually run the pipeline.
-
----
-
 ## Further Reading
 
 **Papers**
