@@ -130,7 +130,7 @@ pip install nvidia-physicsnemo
 
 # Data pipeline
 pip install "git+https://github.com/NVIDIA/physicsnemo-curator.git@main-backup#egg=physicsnemo-curator[mesh]"
-pip install lasso-python zarr huggingface_hub hydra-core omegaconf
+pip install lasso-python zarr hydra-core omegaconf
 
 # Notebook + visualization
 pip install jupyterlab numpy matplotlib pandas tabulate pyvista imageio
