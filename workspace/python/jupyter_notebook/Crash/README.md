@@ -52,29 +52,22 @@ flowchart LR
     style C2 fill:#1a6b3a,color:#fff
 ```
 
-| # | Notebook | What you do | Time | GPU? |
-|:-:|----------|-------------|:----:|:----:|
-| **Sim** | `Notebook_Crash_SimGen-OpenRadioss.ipynb` | Generate your own crash dataset with OpenRadioss | 2–6 h | No (CPU) |
-| **0** | `Notebook_Crash0-Data-Preprocessing.ipynb` | Convert d3plot binaries → Zarr stores | 15–60 min | No |
-| **1** | `Notebook_Crash1-Architecture-and-Concepts.ipynb` | Learn the architecture with NumPy blueprints | 45–90 min | No |
-| **2** | `Notebook_Crash2-Training-Integration-Comparison.ipynb` | Train and compare three rollout strategies | 2–4 h | **Yes** |
+| # | Notebook | What you do |
+|:-:|----------|-------------|
+| **Sim** | `Notebook_Crash_SimGen-OpenRadioss.ipynb` | Generate your own crash dataset with OpenRadioss |
+| **0** | `Notebook_Crash0-Data-Preprocessing.ipynb` | Convert d3plot binaries → Zarr stores |
+| **1** | `Notebook_Crash1-Architecture-and-Concepts.ipynb` | Learn the architecture with NumPy blueprints |
+| **2** | `Notebook_Crash2-Training-Integration-Comparison.ipynb` | Train and compare three rollout strategies |
 
-### Two paths through the series
+### The full pipeline
 
-**Path A — Fast track (recommended for a first pass).**
-Skip the SimGen notebook and download the pre-computed dataset from HuggingFace in Crash-0.
-You reach training in about an hour.
-
-```
-Crash-0 (HuggingFace download)  →  Crash-1  →  Crash-2
-```
-
-**Path B — Full pipeline.**
-Generate the dataset yourself with OpenRadioss. Slower, but you control the design of
-experiments and can substitute your own geometry.
+You generate the dataset yourself with OpenRadioss, preprocess it, and train on it —
+end to end, with no external dataset dependency:
 
 ```
-Crash-Sim  →  Crash-0 (your own data)  →  Crash-1  →  Crash-2
+Crash-Sim  →  Crash-0  →  Crash-2
+                 ↑
+              Crash-1 (concepts, independent)
 ```
 
 > **Notebook Crash-1 is independent.** It runs on pure NumPy with no dataset at all — you can
@@ -94,15 +87,6 @@ Crash-Sim  →  Crash-0 (your own data)  →  Crash-1  →  Crash-2
 | | PyTorch (only needed to modify the training code, not to run it) |
 
 Everything transformer-specific is taught in Notebook Crash-1.
-
-### Hardware
-
-| Notebook | Minimum | Recommended |
-|----------|---------|-------------|
-| **Crash-Sim** | 8 CPU cores, 20 GB disk | 32+ cores (runs simulations in parallel) |
-| **Crash-0** | 16 GB RAM, 10 GB disk | 32 GB RAM |
-| **Crash-1** | Any laptop | — |
-| **Crash-2** | 1× GPU with 16 GB VRAM | 1× A100 40 GB, or multi-GPU for DDP |
 
 ### Software
 
@@ -161,7 +145,7 @@ setup first — but doing it up front avoids surprises mid-notebook.
 
 ### Additional setup for Notebook Crash-Sim only
 
-Skip this section entirely if you are taking **Path A** (HuggingFace dataset).
+Required — Crash-Sim generates the dataset the rest of the series consumes.
 
 ```bash
 # 1. Download the pre-built OpenRadioss binaries (~76 MB)
@@ -199,8 +183,9 @@ Section 5 gives the exact URLs and target paths.
 
 ### Notebook Crash-Sim — OpenRadioss Dataset Generation
 
-**Optional.** Generates a parameterised crash dataset from scratch. Take this path if you want
-to control the design of experiments or use your own geometry.
+Generates the parameterised crash dataset the rest of the series consumes — from scratch,
+with no external dataset dependency. You control the design of experiments and can
+substitute your own geometry.
 
 You run a six-step pipeline for each design point:
 
@@ -245,6 +230,13 @@ Total: 5 × 3 × 3 × 1 × 3 = **135 runs**
 - **Parallelism rule:** `MAX_PARALLEL_JOBS × OMP_NUM_THREADS ≤ total CPU cores`. The notebook
   auto-calculates this from `multiprocessing.cpu_count()`.
 
+> **On the drop test.** Section 14 generates it, but the downstream notebooks are wired for the
+> bumper beam only: Crash-0 and Crash-2 point at the bumper-beam paths, and the PhysicsNeMo
+> recipe ships no drop-test config. Its conditioning variables also differ
+> (`e_scale_mat*`, `rwall_orientation_*` vs the bumper beam's
+> `velocity_x`, `thickness_scale`, `rwall_origin_y`). Treat it as a second worked example of the
+> DoE machinery, not as a second training dataset — wiring it end to end needs a new config.
+
 **Runtime:** ~5 min for the 2-run mini DoE; 2–6 hours for all 135 runs depending on core count.
 
 **Output:** `data/bumperbeam_openradioss/RAW_DATA/Run0001/d3plot*` plus `global_features.json`.
@@ -279,13 +271,14 @@ can read efficiently.
 | Split | Partition at the **run** level | Splitting by timestep would leak information between train and val |
 | Write | Chunked, compressed Zarr | Random per-run access without loading 117 MB into RAM |
 
-**Data source — choose one:**
+**Data source.** Crash-0 reads what Crash-SimGen produced. Set this at the top of Section 4:
 
-- **Option A (fast):** `DEMO_MODE = True` downloads 5 training + 2 validation runs (~700 MB)
-  from HuggingFace (`AIRBORNEPANDA/BumperBeamCrashExample`) into `data/bumperbeam_raw/`.
-  Set `DEMO_MODE = False` for the full ~6.4 GB dataset.
-- **Option B:** Point `RAW_DIR` at your Crash-Sim output
-  (`data/bumperbeam_openradioss/RAW_DATA/`) and skip the download cell.
+```python
+DATA_SOURCE = "simgen"      # reads ../data/bumperbeam_openradioss/RAW_DATA/
+```
+
+The cell verifies the expected `RAW_DATA/Run*/` layout is present and reports whether each run
+has both a bare `d3plot` file and its `.k` thickness file before the ETL runs.
 
 **Runtime:** ~15 min in demo mode; ~60 min for the full dataset.
 
@@ -299,12 +292,13 @@ data/bumperbeam_zarr/Run100.zarr/  Run101.zarr/  ...
 
 ```
 data/bumperbeam_zarr/
-├── train/run_100/  run_101/  ...
-└── val/run_150/    ...
+├── train/Run1.zarr/  Run2.zarr/  ...
+└── val/Run7.zarr/    ...
 ```
 
-> **Do not skip Section 6.2.** Crash-2 globs for `ZARR_ROOT/train/run_*`. If the stores are
-> still flat, Crash-2 Section 3 reports `Training runs: 0` and training cannot start.
+> **Do not skip Section 6.2**, and note the `.zarr` suffix is deliberately preserved —
+> PhysicsNeMo's `zarr_reader` filters on it. If the stores are still flat, or the suffix is
+> stripped, training silently sees zero runs.
 
 Sections 7–8 validate shapes, plot dataset statistics, and animate the deformation straight
 from the Zarr store — always run these before moving on. A silent ETL bug is much cheaper to
@@ -389,13 +383,26 @@ cd ../crash
 
 python train.py \
   --config-name=bumper_geotransolver_oneshot \
-  datapipe.zarr_path=../data/bumperbeam_zarr/train \
-  training.max_epochs=200 \
-  training.checkpoint_dir=../checkpoints/oneshot
+  reader=zarr \
+  training.raw_data_dir=../data/bumperbeam_zarr/train \
+  training.raw_data_dir_validation=../data/bumperbeam_zarr/val \
+  training.global_features_filepath=../data/bumperbeam_zarr/global_features.json \
+  training.num_time_steps=51 \
+  training.epochs=200 \
+  training.ckpt_path=../checkpoints/oneshot \
+  'datapipe.dynamic_targets=[]' \
+  model.out_dim=150
 ```
 
-Substitute `bumper_geotransolver_time_conditional` or `bumper_geotransolver_ar_rollout` for
-the other two methods. For multi-GPU:
+> **Why those last three overrides.** The bumper configs default to `reader: vtp`, and ask for
+> `effective_plastic_strain` / `stress_vm` as targets — fields our d3plots do not contain
+> (the engine deck requests displacement only). Dropping the dynamic targets changes the
+> output width to `(51 − 1) × 3 = 150`.
+
+Substitute `bumper_geotransolver_time_conditional` (with `model.out_dim=3`) for the
+time-conditional run. **There is no `bumper_geotransolver_ar_rollout` config** — AR-rollout is
+composed from the one-shot config plus `model=geotransolver_autoregressive_rollout_training`;
+see Notebook Crash-2 Section 7. For multi-GPU:
 
 ```bash
 torchrun --nproc_per_node=4 train.py --config-name=bumper_geotransolver_oneshot
@@ -433,7 +440,7 @@ Working through this at a comfortable pace:
 | Session | Content | Duration |
 |:-------:|---------|:--------:|
 | 1 | Setup + Notebook Crash-1 (concepts first) | 2 h |
-| 2 | Notebook Crash-0 with the HuggingFace dataset | 1.5 h |
+| 2 | Notebook Crash-0 — preprocess the generated data | 1.5 h |
 | 3 | Notebook Crash-2 — walkthrough, launch a training run | 2 h |
 | 4 | Notebook Crash-2 — evaluate results, OOD guardrails | 1.5 h |
 | 5 *(optional)* | Notebook Crash-Sim — generate your own dataset | 3 h |
@@ -465,9 +472,8 @@ way it is, which makes Crash-0's preprocessing choices much less arbitrary.
 | `CrashZarrDataSource` not found | Installed curator from `main` | Reinstall from the `main-backup` branch |
 | `No d3plot files found` | Files still have the mesh-name prefix | Run the Section 10 rename step in Crash-Sim |
 | `No cells left after filtering` | `wall_threshold` too aggressive | Raise it to 2.0 |
-| HuggingFace download stalls | Network or auth | `huggingface-cli login`, or download the repo manually |
-| Out of memory during ETL | Loading too many runs at once | Use `DEMO_MODE = True`, or lower the chunk size |
-| Crash-2 later reports `Training runs: 0` | Section 6.2 split step not run | Run Section 6.2 — the ETL leaves stores flat, Crash-2 needs `train/run_*` |
+| Out of memory during ETL | Loading too many runs at once | Use `USE_MINI_DOE = True` in Crash-Sim, or lower the chunk size |
+| Crash-2 later reports `Training runs: 0` | Section 6.2 split not run, or `.zarr` suffix stripped | Run Section 6.2 — stores must end up as `train/*.zarr` |
 
 ### Notebook Crash-2
 
@@ -516,11 +522,10 @@ Transolver/
 ├── utils/  fig/  *.pptx  patch_*.py
 │
 └── data/                                           ← created as you work
-    ├── bumperbeam_raw/RAW_DATA/Run*/               ← HuggingFace download (Crash-0 Option A)
-    ├── bumperbeam_openradioss/RAW_DATA/Run*/       ← Crash-Sim output (Crash-0 Option B)
+    ├── bumperbeam_openradioss/RAW_DATA/Run*/       ← Crash-Sim output (input to Crash-0)
     └── bumperbeam_zarr/
-        ├── train/run_*/                            ← after Crash-0 Section 6.2
-        └── val/run_*/
+        ├── train/Run*.zarr/                        ← after Crash-0 Section 6.2
+        └── val/Run*.zarr/
 ```
 
 **About the cluster copy.** `Notebook_Crash_SimGen-OpenRadioss_run_on_cluster.ipynb` preserves
