@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="560" viewBox="0 0 900 560" font-family="Helvetica,Arial,sans-serif">
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#5a6478"/></marker></defs>
+<rect width="900" height="560" fill="#ffffff"/>
+<text x="450.0" y="30" text-anchor="middle" font-size="17" font-weight="700" fill="#1a1a1a">Four Rollout / Integration Strategies</text>
+<rect x="30" y="48" width="840" height="104" rx="10" fill="#f4f6fa" stroke="#c3cad8" stroke-dasharray="5 4"/>
+<text x="42" y="68" font-size="12" font-weight="700" fill="#5a6478">1 · One-Shot</text>
+<rect x="30" y="168" width="840" height="104" rx="10" fill="#f4f6fa" stroke="#c3cad8" stroke-dasharray="5 4"/>
+<text x="42" y="188" font-size="12" font-weight="700" fill="#5a6478">2 · Time-Conditional</text>
+<rect x="30" y="288" width="840" height="104" rx="10" fill="#f4f6fa" stroke="#c3cad8" stroke-dasharray="5 4"/>
+<text x="42" y="308" font-size="12" font-weight="700" fill="#5a6478">3 · Autoregressive</text>
+<rect x="30" y="408" width="840" height="104" rx="10" fill="#f4f6fa" stroke="#c3cad8" stroke-dasharray="5 4"/>
+<text x="42" y="428" font-size="12" font-weight="700" fill="#5a6478">4 · Teacher Forcing</text>
+<path d="M 312.0 105.0 L 348.0 105.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<path d="M 442.0 105.0 L 478.0 105.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<path d="M 312.0 225.0 L 348.0 225.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<path d="M 442.0 225.0 L 478.0 225.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<path d="M 655.0 250.0 L 655.0 268.0 L 185.0 268.0 L 185.0 250.0" fill="none" stroke="#5a6478" stroke-width="1.8" stroke-dasharray="6 5" marker-end="url(#ah)"/>
+<path d="M 312.0 345.0 L 348.0 345.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<path d="M 442.0 345.0 L 478.0 345.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<path d="M 655.0 370.0 L 655.0 388.0 L 185.0 388.0 L 185.0 370.0" fill="none" stroke="#5a6478" stroke-width="1.8" stroke-dasharray="6 5" marker-end="url(#ah)"/>
+<path d="M 312.0 465.0 L 348.0 465.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<path d="M 442.0 465.0 L 478.0 465.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<path d="M 655.0 490.0 L 655.0 508.0 L 185.0 508.0 L 185.0 490.0" fill="none" stroke="#5a6478" stroke-width="1.8" stroke-dasharray="6 5" marker-end="url(#ah)"/>
+<rect x="60" y="82" width="250" height="46" rx="8" fill="#ffffff" stroke="#8a94a6" stroke-width="1.5"/>
+<text x="185.0" y="109.0" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1a1a">x₀, g</text>
+<rect x="350" y="82" width="90" height="46" rx="8" fill="#1a6b3a" stroke="#333" stroke-width="1.5"/>
+<text x="395.0" y="110.0" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">f</text>
+<rect x="480" y="82" width="350" height="46" rx="8" fill="#ffffff" stroke="#8a94a6" stroke-width="1.5"/>
+<text x="655.0" y="109.0" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1a1a">x₁, x₂, ... x_T−1  (all at once)</text>
+<rect x="60" y="202" width="250" height="46" rx="8" fill="#ffffff" stroke="#8a94a6" stroke-width="1.5"/>
+<text x="185.0" y="229.0" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1a1a">x₀, g, τ = t/(T−1)</text>
+<rect x="350" y="202" width="90" height="46" rx="8" fill="#1a6b3a" stroke="#333" stroke-width="1.5"/>
+<text x="395.0" y="230.0" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">f</text>
+<rect x="480" y="202" width="350" height="46" rx="8" fill="#ffffff" stroke="#8a94a6" stroke-width="1.5"/>
+<text x="655.0" y="229.0" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1a1a">x_t  (one step)</text>
+<rect x="60" y="322" width="250" height="46" rx="8" fill="#ffffff" stroke="#8a94a6" stroke-width="1.5"/>
+<text x="185.0" y="349.0" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1a1a">x_t, g</text>
+<rect x="350" y="322" width="90" height="46" rx="8" fill="#e07b00" stroke="#333" stroke-width="1.5"/>
+<text x="395.0" y="350.0" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">f</text>
+<rect x="480" y="322" width="350" height="46" rx="8" fill="#ffffff" stroke="#8a94a6" stroke-width="1.5"/>
+<text x="655.0" y="349.0" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1a1a">x_t+1</text>
+<rect x="60" y="442" width="250" height="46" rx="8" fill="#ffffff" stroke="#8a94a6" stroke-width="1.5"/>
+<text x="185.0" y="469.0" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1a1a">x_t GROUND TRUTH, g</text>
+<rect x="350" y="442" width="90" height="46" rx="8" fill="#c0392b" stroke="#333" stroke-width="1.5"/>
+<text x="395.0" y="470.0" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">f</text>
+<rect x="480" y="442" width="350" height="46" rx="8" fill="#ffffff" stroke="#8a94a6" stroke-width="1.5"/>
+<text x="655.0" y="469.0" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1a1a">x_t+1</text>
+</svg>

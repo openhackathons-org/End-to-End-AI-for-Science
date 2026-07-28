@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="900" viewBox="0 0 880 900" font-family="Helvetica,Arial,sans-serif">
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#5a6478"/></marker></defs>
+<rect width="880" height="900" fill="#ffffff"/>
+<text x="440.0" y="30" text-anchor="middle" font-size="17" font-weight="700" fill="#1a1a1a">OpenRadioss Dataset Generation Pipeline</text>
+<path d="M 440.0 124.0 L 440.0 146.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<path d="M 440.0 212.0 L 440.0 234.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<path d="M 440.0 300.0 L 440.0 322.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<path d="M 440.0 388.0 L 440.0 410.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<path d="M 440.0 476.0 L 440.0 498.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<path d="M 440.0 564.0 L 440.0 586.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<path d="M 440.0 652.0 L 440.0 674.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<path d="M 440.0 740.0 L 440.0 762.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<path d="M 440.0 828.0 L 440.0 850.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<path d="M 632.0 443.0 L 678.0 443.0" fill="none" stroke="#5a6478" stroke-width="1.8" stroke-dasharray="6 5" marker-end="url(#ah)"/>
+<path d="M 767.5 476.0 L 767.5 498.0" fill="none" stroke="#5a6478" stroke-width="1.8" stroke-dasharray="6 5" marker-end="url(#ah)"/>
+<rect x="250" y="60" width="380" height="62" rx="8" fill="#4a7fb5" stroke="#2f5c8a" stroke-width="1.5"/>
+<text x="440.0" y="87.0" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">.rad Templates</text>
+<text x="440.0" y="104.0" text-anchor="middle" font-size="12" font-weight="400" fill="#ffffff">starter + engine decks</text>
+<rect x="250" y="148" width="380" height="62" rx="8" fill="#6a5acd" stroke="#4d3fa8" stroke-width="1.5"/>
+<text x="440.0" y="175.0" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">Step 0 · generate_dataset.py</text>
+<text x="440.0" y="192.0" text-anchor="middle" font-size="12" font-weight="400" fill="#ffffff">Cartesian product of DoE parameters</text>
+<rect x="250" y="236" width="380" height="62" rx="8" fill="#ffffff" stroke="#8a94a6" stroke-width="1.5"/>
+<text x="440.0" y="263.0" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">dataset/run0001 ... run0135</text>
+<text x="440.0" y="280.0" text-anchor="middle" font-size="12" font-weight="400" fill="#1a1a1a">mutated .rad decks + run.json</text>
+<rect x="250" y="324" width="380" height="62" rx="8" fill="#ffffff" stroke="#8a94a6" stroke-width="1.5"/>
+<text x="440.0" y="351.0" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">Step 1 · Starter</text>
+<text x="440.0" y="368.0" text-anchor="middle" font-size="12" font-weight="400" fill="#1a1a1a">starter_linux64_gf → .rst restart file</text>
+<rect x="250" y="412" width="380" height="62" rx="8" fill="#ffffff" stroke="#8a94a6" stroke-width="1.5"/>
+<text x="440.0" y="439.0" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">Step 2 · Engine</text>
+<text x="440.0" y="456.0" text-anchor="middle" font-size="12" font-weight="400" fill="#1a1a1a">engine_linux64_gf → A001 ... A051</text>
+<rect x="250" y="500" width="380" height="62" rx="8" fill="#ffffff" stroke="#8a94a6" stroke-width="1.5"/>
+<text x="440.0" y="527.0" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">Step 4 · vortex_radioss</text>
+<text x="440.0" y="544.0" text-anchor="middle" font-size="12" font-weight="400" fill="#1a1a1a">ANIM → LS-DYNA d3plot</text>
+<rect x="250" y="588" width="380" height="62" rx="8" fill="#ffffff" stroke="#8a94a6" stroke-width="1.5"/>
+<text x="440.0" y="615.0" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">Step 5 · rename_d3plot.py</text>
+<text x="440.0" y="632.0" text-anchor="middle" font-size="12" font-weight="400" fill="#1a1a1a">d3plot, d3plot01 ... d3plot51</text>
+<rect x="250" y="676" width="380" height="62" rx="8" fill="#6a5acd" stroke="#4d3fa8" stroke-width="1.5"/>
+<text x="440.0" y="703.0" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">Step 6 · restructure_global_features.py</text>
+<text x="440.0" y="720.0" text-anchor="middle" font-size="12" font-weight="400" fill="#ffffff">global_features.json</text>
+<rect x="250" y="764" width="380" height="62" rx="8" fill="#1a6b3a" stroke="#0d4a28" stroke-width="1.5"/>
+<text x="440.0" y="791.0" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">RAW_DATA/Run0001/d3plot*</text>
+<text x="440.0" y="808.0" text-anchor="middle" font-size="12" font-weight="400" fill="#ffffff">+ global_features.json</text>
+<rect x="250" y="852" width="380" height="62" rx="8" fill="#1a6b3a" stroke="#0d4a28" stroke-width="1.5"/>
+<text x="440.0" y="879.0" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">Notebook Crash-0</text>
+<text x="440.0" y="896.0" text-anchor="middle" font-size="12" font-weight="400" fill="#ffffff">Curator ETL → Zarr</text>
+<rect x="680" y="412" width="175" height="62" rx="8" fill="#e07b00" stroke="#a85c00" stroke-width="1.5"/>
+<text x="767.5" y="439.0" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">Step 3 · anim_to_vtk</text>
+<text x="767.5" y="456.0" text-anchor="middle" font-size="12" font-weight="400" fill="#ffffff">A001 → A001.vtk</text>
+<rect x="680" y="500" width="175" height="62" rx="8" fill="#e07b00" stroke="#a85c00" stroke-width="1.5"/>
+<text x="767.5" y="527.0" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">Section 13</text>
+<text x="767.5" y="544.0" text-anchor="middle" font-size="12" font-weight="400" fill="#ffffff">film-strip + GIF</text>
+</svg>

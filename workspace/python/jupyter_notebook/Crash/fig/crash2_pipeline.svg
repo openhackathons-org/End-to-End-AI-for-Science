@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="760" viewBox="0 0 900 760" font-family="Helvetica,Arial,sans-serif">
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#5a6478"/></marker></defs>
+<rect width="900" height="760" fill="#ffffff"/>
+<text x="450.0" y="30" text-anchor="middle" font-size="17" font-weight="700" fill="#1a1a1a">Training &amp; Evaluation Pipeline</text>
+<path d="M 450.0 113.0 L 450.0 138.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<path d="M 450.0 198.0 L 450.0 223.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<path d="M 450.0 283.0 L 450.0 308.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<path d="M 365.4 358.0 L 264.0 388.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<path d="M 256.2 448.0 L 350.0 478.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<path d="M 449.3 358.0 L 448.4 388.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<path d="M 448.3 448.0 L 449.1 478.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<path d="M 533.1 358.0 L 632.8 388.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<path d="M 640.4 448.0 L 548.3 478.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<path d="M 450.0 542.0 L 450.0 568.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<path d="M 450.0 624.0 L 450.0 658.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<rect x="270" y="55" width="360" height="56" rx="8" fill="#4a7fb5" stroke="#2f5c8a" stroke-width="1.5"/>
+<text x="450.0" y="79.0" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">Zarr Store  (from Crash-0)</text>
+<text x="450.0" y="96.0" text-anchor="middle" font-size="12" font-weight="400" fill="#ffffff">train/run_*  ·  val/run_*</text>
+<rect x="270" y="140" width="360" height="56" rx="8" fill="#ffffff" stroke="#8a94a6" stroke-width="1.5"/>
+<text x="450.0" y="164.0" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">zarr_reader</text>
+<text x="450.0" y="181.0" text-anchor="middle" font-size="12" font-weight="400" fill="#1a1a1a">coords, displacement, globals</text>
+<rect x="270" y="225" width="360" height="56" rx="8" fill="#6a5acd" stroke="#4d3fa8" stroke-width="1.5"/>
+<text x="450.0" y="249.0" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">datapipe</text>
+<text x="450.0" y="266.0" text-anchor="middle" font-size="12" font-weight="400" fill="#ffffff">normalize → SimSample</text>
+<rect x="270" y="310" width="360" height="46" rx="8" fill="#ffffff" stroke="#8a94a6" stroke-width="1.5"/>
+<text x="450.0" y="337.0" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1a1a">DataLoader  (batch = 1, variable N)</text>
+<rect x="30" y="390" width="265" height="56" rx="8" fill="#6a5acd" stroke="#4d3fa8" stroke-width="1.5"/>
+<text x="162.5" y="414.0" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">One-Shot</text>
+<text x="162.5" y="430.0" text-anchor="middle" font-size="11" font-weight="400" fill="#ffffff">[N, T−1, 3] · 1 sample/run</text>
+<rect x="315" y="390" width="265" height="56" rx="8" fill="#6a5acd" stroke="#4d3fa8" stroke-width="1.5"/>
+<text x="447.5" y="414.0" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">Time-Conditional</text>
+<text x="447.5" y="430.0" text-anchor="middle" font-size="11" font-weight="400" fill="#ffffff">[N,3] · T−1 samples/run</text>
+<rect x="600" y="390" width="265" height="56" rx="8" fill="#6a5acd" stroke="#4d3fa8" stroke-width="1.5"/>
+<text x="732.5" y="414.0" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">Autoregressive</text>
+<text x="732.5" y="430.0" text-anchor="middle" font-size="11" font-weight="400" fill="#ffffff">[N,3] · rolled out T−1×</text>
+<rect x="250" y="480" width="400" height="60" rx="8" fill="#e07b00" stroke="#a85c00" stroke-width="1.5"/>
+<text x="450.0" y="506.0" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">train.py</text>
+<text x="450.0" y="523.0" text-anchor="middle" font-size="12" font-weight="400" fill="#ffffff">MSE + AdamW + cosine · AMP · DDP</text>
+<rect x="250" y="570" width="400" height="52" rx="8" fill="#ffffff" stroke="#8a94a6" stroke-width="1.5"/>
+<text x="450.0" y="592.0" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">inference.py</text>
+<text x="450.0" y="609.0" text-anchor="middle" font-size="12" font-weight="400" fill="#1a1a1a">rollout + denormalize</text>
+<rect x="250" y="660" width="400" height="56" rx="8" fill="#1a6b3a" stroke="#0d4a28" stroke-width="1.5"/>
+<text x="450.0" y="684.0" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">Evaluation — Sections 9–14</text>
+<text x="450.0" y="701.0" text-anchor="middle" font-size="12" font-weight="400" fill="#ffffff">MSE · L² vs t · deformation plots</text>
+</svg>

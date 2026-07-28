@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="760" viewBox="0 0 900 760" font-family="Helvetica,Arial,sans-serif">
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#5a6478"/></marker></defs>
+<rect width="900" height="760" fill="#ffffff"/>
+<text x="450.0" y="30" text-anchor="middle" font-size="17" font-weight="700" fill="#1a1a1a">ETL Pipeline: d3plot → Zarr</text>
+<rect x="40" y="55" width="820" height="90" rx="10" fill="#f4f6fa" stroke="#c3cad8" stroke-dasharray="5 4"/>
+<text x="52" y="75" font-size="12" font-weight="700" fill="#5a6478">Data source — pick one</text>
+<rect x="180" y="360" width="540" height="175" rx="10" fill="#f4f6fa" stroke="#c3cad8" stroke-dasharray="5 4"/>
+<text x="192" y="380" font-size="12" font-weight="700" fill="#5a6478">physicsnemo-curator ETL</text>
+<path d="M 312.0 135.0 L 391.1 178.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<path d="M 595.0 135.0 L 511.9 178.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<path d="M 450.0 242.0 L 450.0 273.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<path d="M 450.0 337.0 L 450.0 383.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<path d="M 450.0 427.0 L 450.0 431.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<path d="M 450.0 475.0 L 450.0 479.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<path d="M 450.0 523.0 L 450.0 558.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<path d="M 450.0 620.0 L 450.0 658.0" fill="none" stroke="#5a6478" stroke-width="1.8" marker-end="url(#ah)"/>
+<rect x="70" y="75" width="370" height="58" rx="8" fill="#e07b00" stroke="#a85c00" stroke-width="1.5"/>
+<text x="255.0" y="100.0" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">Option A · HuggingFace</text>
+<text x="255.0" y="117.0" text-anchor="middle" font-size="12" font-weight="400" fill="#ffffff">BumperBeamCrashExample (pre-computed)</text>
+<rect x="470" y="75" width="370" height="58" rx="8" fill="#e07b00" stroke="#a85c00" stroke-width="1.5"/>
+<text x="655.0" y="100.0" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">Option B · Notebook Crash-Sim</text>
+<text x="655.0" y="117.0" text-anchor="middle" font-size="12" font-weight="400" fill="#ffffff">your own OpenRadioss sweep</text>
+<rect x="235" y="180" width="430" height="60" rx="8" fill="#ffffff" stroke="#8a94a6" stroke-width="1.5"/>
+<text x="450.0" y="206.0" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1a1a">Raw d3plot layout</text>
+<text x="450.0" y="223.0" text-anchor="middle" font-size="12" font-weight="400" fill="#1a1a1a">RAW_DATA/Run0001/d3plot* + global_features.json</text>
+<rect x="235" y="275" width="430" height="60" rx="8" fill="#4a7fb5" stroke="#2f5c8a" stroke-width="1.5"/>
+<text x="450.0" y="301.0" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">lasso-python D3plot reader</text>
+<text x="450.0" y="318.0" text-anchor="middle" font-size="12" font-weight="400" fill="#ffffff">node_coordinates, node_displacement, shell indexes</text>
+<rect x="205" y="385" width="490" height="40" rx="8" fill="#6a5acd" stroke="#4d3fa8" stroke-width="1.5"/>
+<text x="450.0" y="409.0" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">Filter — drop rigid-wall nodes (wall_threshold)</text>
+<rect x="205" y="433" width="490" height="40" rx="8" fill="#6a5acd" stroke="#4d3fa8" stroke-width="1.5"/>
+<text x="450.0" y="457.0" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">Normalize — per-field mean / std</text>
+<rect x="205" y="481" width="490" height="40" rx="8" fill="#6a5acd" stroke="#4d3fa8" stroke-width="1.5"/>
+<text x="450.0" y="505.0" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">Write — chunked, compressed Zarr</text>
+<rect x="235" y="560" width="430" height="58" rx="8" fill="#c0392b" stroke="#8e2b1f" stroke-width="1.5"/>
+<text x="450.0" y="585.0" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">Section 6.2 · Split</text>
+<text x="450.0" y="602.0" text-anchor="middle" font-size="12" font-weight="400" fill="#ffffff">train/run_* and val/run_*</text>
+<rect x="235" y="660" width="430" height="58" rx="8" fill="#1a6b3a" stroke="#0d4a28" stroke-width="1.5"/>
+<text x="450.0" y="685.0" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">Zarr store → Notebook Crash-2</text>
+<text x="450.0" y="702.0" text-anchor="middle" font-size="12" font-weight="400" fill="#ffffff">data/bumperbeam_zarr/</text>
+</svg>
