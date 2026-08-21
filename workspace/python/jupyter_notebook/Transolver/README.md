@@ -2,106 +2,121 @@
 
 Welcome to this tutorial series! This hands-on guide walks through the journey from standard Transformer theory to **Transolver** and **GeoTransolver** — state-of-the-art AI surrogate models for predicting physical fields on complex 3D geometries.
 
-Our goal is to bridge the gap between abstract AI concepts and a production-ready simulation pipeline built on **NVIDIA PhysicsNeMo**. By the end of the series, you will understand how to train models that predict aerodynamic surface fields (pressure, wall shear stress, etc.) on arbitrary car bodies — tasks that would classically require hours of CFD simulation.
+Our goal is to bridge the gap between abstract AI concepts and a production-ready simulation pipeline built on **NVIDIA PhysicsNeMo**. By the end of the series, you will understand how to train models that predict aerodynamic surface fields (pressure, wall shear stress) on arbitrary car bodies — tasks that would classically require hours of CFD simulation.
 
 ### Papers
 
 > **Transolver: A Fast Transformer Solver for PDEs on General Geometries**
 > Wu et al., 2024 — [arXiv:2402.02366](https://arxiv.org/abs/2402.02366)
 
-> **GeoTransolver** — NVIDIA PhysicsNeMo extension adding Geometry-Aware Layer Ensemble (GALE):
-> [`physicsnemo.experimental.models.geotransolver`](https://github.com/NVIDIA/physicsnemo/tree/main/examples/cfd/external_aerodynamics/transformer_models)
+> **GeoTransolver: Learning Physics on Irregular Domains Using Multi-scale Geometry Aware Physics Attention Transformer**
+> 2025 — [arXiv:2512.20399](https://arxiv.org/abs/2512.20399)
+> Adds **GALE (Geometry-Aware Latent Embeddings)** attention to the Transolver backbone.
+> Implementation: [`physicsnemo.experimental.models.geotransolver`](https://github.com/NVIDIA/physicsnemo/tree/main/physicsnemo/experimental/models/geotransolver)
+> Training recipe: [`examples/cfd/external_aerodynamics/transformer_models`](https://github.com/NVIDIA/physicsnemo/tree/main/examples/cfd/external_aerodynamics/transformer_models)
 
 ---
 
 ## Series Overview
 
-The series consists of seven notebooks. **Run Notebook 0 once** before the training notebooks — it produces the Zarr dataset and normalization file that Notebooks 3 and 5 both share.
+Seven notebooks. **Run Notebook 0 once** before the training notebooks — it produces the Zarr dataset and normalization file that Notebooks 3 and 5 both share.
 
-| # | Notebook | Topic |
-|---|----------|-------|
-| **0** | **Data Preprocessing** | **VTP/STL → Zarr, per-case velocity from info files, normalization** |
-| 1 | Understanding Transformers & the Bottleneck | Why standard attention fails at $O(N^2)$ for large meshes |
-| 2 | Understanding Transolver | Physics-Attention: Slice → Aggregate → Attend → Deslice |
-| 3 | Training Transolver | `TransolverDataPipe` training loop, slice visualization |
-| 4 | Understanding GALE & GeoTransolver | Geometry-Aware Layer Ensemble and how it extends Transolver |
-| 5 | Training GeoTransolver | Same pipeline as NB3, `broadcast_global_features=False`, GALE |
-| 6 | Uncertainty Quantification | MC-Dropout & Concrete Dropout for per-point epistemic uncertainty |
+| # | Notebook | Topic | Needs the dataset? |
+|---|----------|-------|---|
+| **0** | **Data Preprocessing** | VTP/STL → Zarr, per-case velocity, normalization | **yes** |
+| 1 | Understanding Transformers & the Bottleneck | Why standard attention fails at $O(N^2)$ | partly (Part 3 only) |
+| 2 | Understanding Transolver | Physics-Attention: Slice → Aggregate → Attend → Deslice | no |
+| 3 | Training Transolver | `TransolverDataPipe` loop, slice + entropy analysis | yes |
+| 4 | Understanding GALE & GeoTransolver | Geometry-Aware Latent Embeddings | optional (Section 5.7 reads a checkpoint) |
+| 5 | Training GeoTransolver | `broadcast_global_features=False`, GALE | yes |
+| 6 | Uncertainty Quantification | MC-Dropout & Concrete Dropout | Sections 5–6 only |
+
+Notebooks 1 and 2 run anywhere with only NumPy, SciPy, scikit-learn and Matplotlib.
 
 ---
 
 ### Notebook 0 — Data Preprocessing (run once, shared by NB3 & NB5)
 
-This notebook converts the raw Ahmed body dataset into the Zarr format that both training notebooks consume:
+Converts the raw Ahmed body dataset into the Zarr format both training notebooks consume:
 
-- Reads each case's inlet velocity from its companion info file (velocity differs per simulation — it is not a single global constant).
-- Saves `air_density` as a config constant and `stream_velocity` per-case into every Zarr store.
-- Saves `stl_coordinates` (raw STL vertices) for GeoTransolver's GALE cross-attention in Notebook 5.
-- Computes per-channel normalization statistics with Welford's online algorithm (training split only) and writes `surface_fields_normalization.npz`.
+- Reads each case's inlet velocity from its companion `<case>_info.txt` file (velocity differs per simulation — it is not a global constant; the dataset spans 20–60 m/s).
+- Non-dimensionalises the surface fields by the **kinematic** dynamic pressure $q = \tfrac12 U^2$. The VTP `p` and `wallShearStress` arrays are kinematic (m²/s²) in the OpenFOAM incompressible convention, so no density factor enters. Result: true $C_p$, peaking near $+1$ at stagnation.
+- Saves `air_density` (a dataset constant) and per-case `stream_velocity` into every store — `TransolverDataPipe` builds `batch["fx"]` from exactly these two.
+- Saves `stl_coordinates` (raw STL vertices) for GeoTransolver's GALE context in Notebook 5.
+- Computes per-channel statistics with Welford's algorithm over the **training split only** and writes `surface_fields_normalization.npz`.
 
----
+> **If you regenerate the data, checkpoints trained on the previous convention become invalid.** The per-case $q$ varies 9× across the velocity range, so the two target spaces are not related by a constant and z-scoring will not absorb the difference. Notebook 5 checks this and refuses to resume across the boundary.
 
 ### Notebook 1 — The "Why": The Quadratic Bottleneck
 
-We start with the core **attention mechanism** of the standard Transformer. You will discover its critical limitation: **quadratic complexity $O(N^2)$**. We demonstrate why this makes standard Transformers impractical for the millions of mesh points found in real engineering simulations.
+We start with the **attention mechanism** of the standard Transformer and its limitation: **quadratic cost $O(N^2 d_k)$**. Note the real barrier is arithmetic, not memory — FlashAttention-style kernels compute exact attention without materialising the $N \times N$ matrix, but the operation count remains. That is what Transolver removes.
 
 ### Notebook 2 — The "How": Physics-Attention Mechanics
 
-We build a **NumPy blueprint** of Transolver's solution: **Physics-Attention**. You implement the four-step process — **Slice, Aggregate, Attend, Deslice** — that breaks the $O(N^2)$ wall. The key insight: Transolver groups $N$ mesh points into $M \ll N$ "physics-aware slice tokens," so attention runs in $O(M^2)$ instead.
+A **NumPy blueprint** of Physics-Attention: **Slice, Aggregate, Attend, Deslice**. $N$ mesh points are grouped into $M \ll N$ physics-aware slice tokens, so the *attention matrix* is $M \times M$. The layer as a whole is $O(NMC)$ — linear in $N$, which is the point; the $O(M^2C)$ attention is not the dominant term.
+
+The notebook also measures what this costs: the output has rank $\le M$, so Physics-Attention is a structured **low-rank approximation** of full attention, not an exact reformulation.
 
 ### Notebook 3 — The "Factory": Training Transolver
 
-We move from theory to a production-grade implementation following the **PhysicsNeMo** `transformer_models/src` workflow. Notebook 0 must be run first to produce the Zarr dataset. This notebook then focuses on:
+Production-grade implementation following the PhysicsNeMo `transformer_models/src` workflow. Notebook 0 must run first.
 
-- **Data pipeline:** `TransolverDataPipe` + `CAEDataset` — reads the Zarr stores from NB0, handling centering, subsampling, and normalization internally.
-- **Model selection via YAML:** In production, `conf/model/transolver.yaml` selects the model class through Hydra:
+- **Data pipeline:** `TransolverDataPipe` + `CAEDataset` — centering, subsampling, normalization.
+- **Model selection via YAML:** in production, `conf/model/transolver.yaml` selects the class through Hydra:
   ```yaml
   _target_: physicsnemo.models.transolver.Transolver
-  functional_dim: 2   # air_density + stream_velocity — broadcast to all N mesh points
+  functional_dim: 2   # air_density + stream_velocity — broadcast to all N points
   embedding_dim:  6   # mesh_centers(3) + normals(3)
   out_dim:        4   # Cp, Cf_x, Cf_y, Cf_z
   ```
-  Because Transolver has no dedicated global-conditioning pathway, `broadcast_global_features: true` copies the two flow scalars to every mesh point so they enter the model alongside the local geometry features.
-- **Training:** Abbreviated loop using the same `forward_pass` logic as the production `train.py`.
-- **Visualization:** Ascription weight maps (learned slice assignments) and Shannon entropy analysis to quantify and spatially map model uncertainty.
+  Transolver has no dedicated global-conditioning pathway, so `broadcast_global_features: true` copies the two flow scalars to every mesh point.
+- **Training:** abbreviated loop mirroring the production `train.py`.
+- **Analysis:** ascription weight maps and Shannon entropy — computed **per attention head** and with the model's **learned softmax temperature** applied, both of which materially change the result.
 
 ### Notebook 4 — Understanding GALE & GeoTransolver
 
-We examine the **Geometry-Aware Layer Ensemble (GALE)** — a cross-attention mechanism that re-injects raw STL geometry at every transformer block to prevent representation drift in deep physics-attention stacks. You will understand:
+We examine **GALE (Geometry-Aware Latent Embeddings)** — cross-attention that gives every transformer block access to a persistent geometry context, preventing representation drift in deep stacks.
 
-- Why geometry context fades in deep networks and why GALE is needed
-- How GALE cross-attention works mathematically
-- The full architectural difference between Transolver and GeoTransolver
+- Why geometry context fades with depth
+- How GALE works: self-attention and cross-attention both operate on the $M$ **slice tokens**, blended by a learned gate
+- Section 5.7 reads the learned gate out of a trained checkpoint — a measurement rather than a claim
 
-### Notebook 6 — Uncertainty Quantification
-
-Adds per-point epistemic confidence estimates to the trained Transolver (or GeoTransolver) without retraining from scratch.
-
-**MC-Dropout:** enable dropout at inference time (`enable_dropout(model)`), run T stochastic forward passes, compute per-point mean and standard deviation. Backed by Gal & Ghahramani's result that dropout networks approximate Bayesian inference over model weights.
-
-**Concrete Dropout:** treat the dropout probability *p* as a learnable parameter. A KL-based regularization term (Bernoulli entropy + weight-norm penalty) is added to the training loss, allowing the model to discover the optimal *p* per layer rather than relying on manual tuning.
-
-The two methods compose: train with Concrete Dropout (learned *p*), then run MC-Dropout at inference with those learned *p* values. The resulting per-point σ map highlights trailing edges, slant junctions, and underbody corners — exactly the regions where CFD verification is most needed.
-
----
+> Two things worth knowing up front: the gate is **one scalar per block**, so it varies with depth but not position; and the multi-scale ball-query features are concatenated into the hidden state **once at the input**, while it is the tokenized geometry/global context that reaches every block.
 
 ### Notebook 5 — Training GeoTransolver
 
-GeoTransolver training uses the **exact same pipeline classes** as Notebook 3 (`TransolverDataPipe` / `CAEDataset`), differing only in two configuration flags:
+Same pipeline classes as Notebook 3, differing in configuration:
 
 | Flag | NB3 — Transolver | NB5 — GeoTransolver |
 |------|-----------------|---------------------|
-| `broadcast_global_features` | `True` — copies air_density + stream_velocity to all $N$ points; `batch["fx"].shape = (1, N, 2)` | `False` — passes them as a single global vector; `batch["fx"].shape = (1, 1, 2)` |
-| `include_geometry` | `False` | `True` — adds `batch["geometry"]` (STL vertices, shape `(1, M, 3)`) for GALE cross-attention |
+| `broadcast_global_features` | `True` — `batch["fx"].shape = (1, N, 2)` | `False` — `(1, 1, 2)` |
+| `include_geometry` | `False` | `True` — adds `batch["geometry"]` `(1, M, 3)` |
+| `scale_invariance` | not used | **`True`** with `reference_scale=[1.35, 0.26, 0.44]` |
+
+> `scale_invariance` is **required**, not an enhancement. The ball-query `radii` are radii *in the scaled frame*, so omitting it makes every local-feature shell sample the wrong neighbourhood — and the checkpoint still loads without complaint.
 
 In production, `conf/model/geotransolver.yaml` selects the model:
 ```yaml
 _target_: physicsnemo.experimental.models.geotransolver.GeoTransolver
 functional_dim: 6   # local_embedding: coords(3) + normals(3)
-global_dim:     2   # global_embedding: air_density + stream_velocity (routed through GALE)
-geometry_dim:   3   # STL vertex coordinates for GALE cross-attention
+global_dim:     2   # global_embedding: air_density + stream_velocity
+geometry_dim:   3   # STL vertex coordinates for GALE context
 out_dim:        4
 ```
+
+### Notebook 6 — Uncertainty Quantification
+
+Adds per-point epistemic confidence to a trained model without retraining from scratch.
+
+**MC-Dropout** — keep dropout active at inference, run $T$ stochastic passes, take the per-point mean and standard deviation. Backed by Gal & Ghahramani's result that dropout networks approximate Bayesian inference over weights.
+
+**Concrete Dropout** — treat $p$ as learnable, with a KL-based regularizer added to the training loss. PhysicsNeMo supports this natively via `model.concrete_dropout=true` and `training.lambda_reg`.
+
+The two **compose rather than compete**: Concrete Dropout supplies at training time the $p$ that MC-Dropout consumes at inference. Concrete Dropout makes no claim to improve accuracy — it removes $p$ as a hyperparameter you have to guess.
+
+The notebook also covers calibration properly: correlation alone does not establish that σ is trustworthy, so it reports **z-RMS**, **coverage**, and a per-tercile breakdown distinguishing a scale error (a single factor fixes it) from a shape error (nothing scalar will).
+
+> Notebook 6 keeps one deliberate **negative result**: on a 1-D toy problem MC-Dropout fails to widen σ across a data gap, at every dropout rate and both activations. Knowing where a method does not fire is more useful than a demo tuned to flatter it.
 
 ---
 
@@ -109,42 +124,39 @@ out_dim:        4
 
 ### 1. NVIDIA NGC Account
 
-You need an NGC account to pull the Docker container:
-[NVIDIA NGC Docker Setup Guide](https://docs.nvidia.com/launchpad/ai/base-command-coe/latest/bc-coe-docker-basics-step-02.html)
+Required to pull the container: [NGC Docker Setup Guide](https://docs.nvidia.com/launchpad/ai/base-command-coe/latest/bc-coe-docker-basics-step-02.html)
 
 ### 2. Ahmed Body Dataset
 
-Download the **Ahmed body surface dataset** from NGC:
-[https://catalog.ngc.nvidia.com/orgs/nvidia/teams/physicsnemo/resources/physicsnemo_ahmed_body_dataset](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/physicsnemo/resources/physicsnemo_ahmed_body_dataset)
+Download from NGC:
+[physicsnemo_ahmed_body_dataset](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/physicsnemo/resources/physicsnemo_ahmed_body_dataset)
 
-After extracting, confirm the directory structure:
+After extracting, confirm the structure:
 
 ```
 physicsnemo_ahmed_body_dataset_vv1/dataset/
-├── train/
-├── train_info/
-├── train_stl_files/
-├── validation/
-├── validation_info/
-├── validation_stl_files/
-├── test/
-├── test_info/
-└── test_stl_files/
+├── train/                 (408 cases)   ├── validation/   (50)   ├── test/   (50)
+├── train_info/                          ├── validation_info/     ├── test_info/
+└── train_stl_files/                     └── validation_stl_files/└── test_stl_files/
 ```
+
+Notebook 0 writes its Zarr output and `surface_fields_normalization.npz` under this tree by default. Notebooks 0, 3 and 6 accept a `ZARR_DIR` environment variable if you prefer to keep generated data elsewhere.
 
 ---
 
 ## Environment Setup
 
-### Step 1 — Pull the PhysicsNeMo 26.05 Container
+### Step 1 — Pull the PhysicsNeMo Container
 
 ```bash
 docker pull nvcr.io/nvidia/physicsnemo/physicsnemo:26.06
 ```
 
+> PhysicsNeMo **25.11 or newer** is required: earlier releases lack the experimental GeoTransolver namespace (NB4/5/6) and the `concrete_dropout` flag (NB6).
+
 ### Step 2 — Launch the Container
 
-Replace `<path_on_host>` with the absolute path to the directory containing your notebooks and Ahmed body dataset. This directory is mounted as `/workspace` inside the container.
+Replace `<path_on_host>` with the absolute path to the directory holding your notebooks and the dataset. It is mounted at `/workspace`.
 
 ```bash
 docker run --gpus 1 --shm-size=2g -p 7008:7008 \
@@ -158,17 +170,16 @@ docker run --gpus 1 --shm-size=2g -p 7008:7008 \
 ### Step 3 — Install Additional Dependencies (Inside Container)
 
 ```bash
-# System packages
-# xvfb provides a virtual framebuffer required by PyVista in headless environments
+# xvfb provides a virtual framebuffer for PyVista in headless environments
 apt-get update && apt-get install -y rsync xvfb
 
-# Python packages
-pip install hydra-core tabulate tensorboard termcolor torchinfo einops
+# Python packages — see requirements.txt for the full pinned list
+pip install -r requirements.txt
 ```
 
-### Step 4 — Start Jupyter Lab
+> Do not install `transformer_engine` unless you need it. Every notebook here sets `use_te=False`, and TE generally installs only inside NGC containers.
 
-Run inside the container to launch Jupyter Lab in the background:
+### Step 4 — Start Jupyter Lab
 
 ```bash
 nohup python3 -m jupyter lab \
@@ -179,17 +190,19 @@ nohup python3 -m jupyter lab \
     > /dev/null 2>&1 &
 ```
 
+Start Jupyter from the directory containing the notebooks — several use relative paths (e.g. `checkpoints_geotransolver`) that resolve against the kernel's working directory.
+
 ### Step 5 — Access Jupyter Lab
 
-**Remote host:** Create an SSH tunnel from your local machine (replace `<remote_hostname>` and `<ssh_alias>` as appropriate):
+**Remote host:** create an SSH tunnel from your local machine:
 
 ```bash
 ssh -L 3030:<remote_hostname>:7008 <ssh_alias>
 ```
 
-Then open `http://localhost:3030` in your browser.
+Then open `http://localhost:3030`.
 
-**Local machine:** Open `http://localhost:7008` directly.
+**Local machine:** open `http://localhost:7008`.
 
 ---
 
@@ -204,9 +217,10 @@ Transolver/
 ├── Notebook4-Understanding-GALE-GeoTransolver.ipynb
 ├── Notebook5-Training-GeoTransolver.ipynb
 ├── Notebook6-Uncertainty-Quantification.ipynb   ← MC-Dropout & Concrete Dropout
-├── requirements.txt          # Python dependencies (see Step 3)
-├── utils/                    # shared utility modules
-└── fig/                      # figures referenced in the notebooks
+├── requirements.txt                             ← Python dependencies
+├── fig/                                         ← figures referenced in the notebooks
+├── checkpoints_geotransolver/                   ← created by NB5
+└── logs_geotransolver/                          ← created by NB5
 ```
 
 ---
@@ -214,8 +228,8 @@ Transolver/
 ## References
 
 - Wu, H., et al. (2024). *Transolver: A Fast Transformer Solver for PDEs on General Geometries.* [arXiv:2402.02366](https://arxiv.org/abs/2402.02366)
+- *GeoTransolver: Learning Physics on Irregular Domains Using Multi-scale Geometry Aware Physics Attention Transformer* (2025). [arXiv:2512.20399](https://arxiv.org/abs/2512.20399)
 - Gal, Y. & Ghahramani, Z. (2016). *Dropout as a Bayesian Approximation.* ICML 2016.
 - Gal, Y., Hron, J., & Kendall, A. (2017). *Concrete Dropout.* NeurIPS 2017.
-- NVIDIA PhysicsNeMo: [https://github.com/NVIDIA/physicsnemo](https://github.com/NVIDIA/physicsnemo)
-- External aerodynamcs recipe in PhysicsNeMo: [`examples/cfd/external_aerodynamics/transformer_models`](https://github.com/NVIDIA/physicsnemo/tree/main/examples/cfd/external_aerodynamics/transformer_models)
-- PhysicsNeMo 26.05 Container: `nvcr.io/nvidia/physicsnemo/physicsnemo:26.05`
+- NVIDIA PhysicsNeMo: [github.com/NVIDIA/physicsnemo](https://github.com/NVIDIA/physicsnemo)
+- External aerodynamics recipe: [`examples/cfd/external_aerodynamics/transformer_models`](https://github.com/NVIDIA/physicsnemo/tree/main/examples/cfd/external_aerodynamics/transformer_models)
