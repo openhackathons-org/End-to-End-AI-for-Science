@@ -34,9 +34,5 @@ RUN pip install --no-cache-dir --no-deps -e git+https://github.com/NVIDIA/modulu
 RUN pip install --no-cache-dir "earth2studio==0.5.0"
 RUN pip install --no-cache-dir cartopy mlflow
 
-
-# Install DoMINO packages
-RUN pip3 install --user -r /workspace/python/jupyter_notebook/DoMINO/requirements.txt
-
 ## Uncomment this line to run Jupyter notebook by default
 CMD jupyter-lab --no-browser --allow-root --ip=0.0.0.0 --port=8888 --NotebookApp.token="" --notebook-dir=/workspace/python/
