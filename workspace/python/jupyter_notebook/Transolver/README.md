@@ -22,9 +22,9 @@ The detailed experiment results belong inside the notebooks, next to the explana
 | [0 — Data Preprocessing](Notebook0-Data-Preprocessing.ipynb) | Match VTP surfaces, STL geometry and info files; read each case's inlet speed; understand geometry scaling and field normalization. | Read the saved walkthrough directly. Supply raw CFD files to execute preprocessing. |
 | [1 — Transformers and the Bottleneck](Notebook1-Understanding-Transformers-and-Bottleneck.ipynb) | Build attention from a small example, examine its cost, and connect it to a surface mesh. | The illustrative examples run without CFD data. A raw VTP is optional. |
 | [2 — Understanding Transolver](Notebook2-Understanding-Transolver.ipynb) | Follow Slice → Aggregate → Attend → Deslice, with arrays and diagrams showing each step. | NumPy-based examples; no trained model or CFD dataset. |
-| [3 — Training Transolver](Notebook3-Training-Transolver.ipynb) | Prepare model inputs, follow training and checkpoint restoration, compare fields and drag, and inspect learned point groupings. | Saved examples are included. Live CFD cells require the matching external data and experiment support. |
+| [3 — Training Transolver](Notebook3-Training-Transolver.ipynb) | Read the model tree, prepare inputs, follow training and checkpoint restoration, compare fields and drag, and inspect learned point groupings. | Saved examples are included. Live CFD cells require the matching external data and experiment support. |
 | [4 — Understanding GALE and GeoTransolver](Notebook4-Understanding-GALE-GeoTransolver.ipynb) | Use small examples to understand the geometry-context path, then inspect learned mixing coefficients. | PyTorch for the small examples. Matching external model files for checkpoint inspection. |
-| [5 — Training GeoTransolver](Notebook5-Training-GeoTransolver.ipynb) | Connect geometry inputs to the trained model, surface predictions, drag and GALE routing. | Saved examples are included. Live CFD cells require CUDA and the matching experiment files. |
+| [5 — Training GeoTransolver](Notebook5-Training-GeoTransolver.ipynb) | Read the model tree, then connect geometry inputs to the trained model, surface predictions, drag and GALE routing. | Saved examples are included. Live CFD cells require CUDA and the matching experiment files. |
 | [6 — Uncertainty Quantification](Notebook6-Uncertainty-Quantification.ipynb) | Repeat predictions, calibrate interval widths, and interpret pressure and whole-body drag uncertainty. | The small regression example runs without CFD data. Ahmed-body calculations require the matching experiment files. |
 
 For the full story, read in numbered order. You can also begin with Notebooks 1 and 2 to learn attention, then return to Notebook 0 before the CFD exercises. Notebook 6 builds on the prediction and drag explanations in Notebooks 3 and 5.
@@ -246,6 +246,8 @@ On a cluster with separate login and compute nodes, follow the institution's app
 
 Open a notebook and select **Python (Transolver tutorial)**. Run cells from the top down. Use **Restart Kernel and Run All Cells** when beginning a lesson again, so it does not depend on variables left over from an earlier run.
 
+Notebooks 3 and 5 begin with a readable model-summary tree. Those cells display the saved architecture and parameter counts without requiring the external checkpoint. Their explanations connect each component to the later input, training and prediction exercises.
+
 Leave `RUN_WITH_DATA = False` for the first pass. This runs the small examples and skips code that requires external CFD data or trained models. The saved Ahmed-body figures and tables remain visible. Notebooks focused on the recorded CFD workflow can therefore be studied before enabling their data cells.
 
 ## Local Python Alternative for the Small Examples
@@ -330,7 +332,9 @@ Use the bundle's documented source and data mount layout as well as these paths.
 
 With the matching files available, enable `RUN_WITH_DATA` in the notebook you are using and rerun from its first cell. Notebook 3's compact scratch option also uses the experiment support code and geometry reference in this edition. Notebook 5's trained-model route requires CUDA and the matching completed GeoTransolver experiment.
 
-The notebooks explain which files each step reads and what it produces. Their separate teaching continuations illustrate training updates while the saved prediction examples remain tied to their documented model state.
+The notebooks explain which files each step reads and what it produces. In Notebooks 3 and 5, a worked training lesson loads the last trained checkpoint, inspects a real batch, summarizes the actual model, and continues training for five epochs. Read the saved cell outputs and the explanation beside each step before running it yourself. The training lesson writes its own checkpoint to a separate output directory; the existing CFD prediction and UQ examples use their documented original model state.
+
+These two notebooks include saved outputs from an executed GPU lesson. If you use **Restart Kernel and Run All** with `RUN_WITH_DATA = False`, Jupyter skips the data-dependent cells and may clear their saved outputs. The explanatory text and recorded results table remain available. To keep the published example open while experimenting, make a working copy of the notebook first. Enable `RUN_WITH_DATA` only after configuring the matching experiment bundle. The continuation needs that bundle's training source and data as well as the checkpoint: loading weights alone is enough for some prediction tasks, but resuming training also needs the optimizer, scheduler, normalization, and case assignments.
 
 ## Optional: Rendering New CFD Surfaces on a Remote Server
 
@@ -360,6 +364,7 @@ Those backend settings require their corresponding runtime libraries. Use the [V
 | A package installs but the notebook cannot import it | Check the selected kernel and `sys.executable`; install dependencies using that environment's `python -m pip`. |
 | PyTorch or PhysicsNeMo cannot be imported | Check whether you are inside the intended container. For the local route, install platform-compatible PyTorch before the requirements. |
 | CUDA is unavailable | CPU is sufficient for the small examples. For the full GPU exercises, check the GPU allocation and container GPU access. |
+| `IProgress not found` during checkpoint inspection | This concerns an optional progress-bar widget. The lesson uses text progress and training continues. Install `ipywidgets` in the notebook environment if you want widget progress bars. |
 | `RUN_WITH_DATA = True` reports missing support code or experiment files | Check the matching experiment bundle and its container-visible paths. Use the default setting while studying the saved lesson. |
 | Notebook 0 reports missing curation/audit files | Configure `UQ_CURATION_REPORT_DIR` with the supplied audit files, or skip that audit cell while running the conversion with raw data alone. |
 | Dataset files cannot be found | Point `AHMED_DATA_DIR` at the extracted `dataset/` root, then check matching VTP, STL and info filenames. |

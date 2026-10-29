@@ -2076,3 +2076,540 @@ __all__ = ['binary_stl_summary', 'build_geometry_reference', 'validate_geometry_
 
 
 
+
+
+# ===========================================================================
+# Executed checkpoint and five-epoch training lessons
+# ===========================================================================
+
+"""Readable checkpoint and five-epoch lessons for the surface-model notebooks.
+
+The public functions are appended to the notebooks' single ``utils.py``.  The
+matching external experiment backend owns data preparation and training; no
+scientific transform or optimization loop is reimplemented here.
+"""
+
+
+def _lesson_support():
+    import importlib.util
+    import os
+    from pathlib import Path
+
+    configured = os.environ.get("VELOCITY_NOTEBOOK_SUPPORT")
+    if configured:
+        path = Path(configured).expanduser().resolve()
+    else:
+        root = os.environ.get("FULL_DATA_UQ_ROOT")
+        if not root:
+            raise RuntimeError("Set FULL_DATA_UQ_ROOT to the matching external experiment backend before running with data.")
+        path = Path(root).expanduser().resolve() / "notebook_support.py"
+    if not path.is_file():
+        raise FileNotFoundError("The external notebook backend is missing: " + str(path))
+    spec = importlib.util.spec_from_file_location("_five_epoch_lesson_backend", path)
+    support = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(support)
+    if not hasattr(support, "training_directory") or not hasattr(support, "TARGET_EPOCHS"):
+        raise ValueError("Use the final-checkpoint backend supporting Transolver 600 and GeoTransolver 500.")
+    return support
+
+
+def _lesson_source(model_type, source_results):
+    from pathlib import Path
+
+    if model_type not in ("transolver", "geotransolver"):
+        raise ValueError("Choose transolver or geotransolver.")
+    support = _lesson_support()
+    source = Path(support._host_path(source_results)).resolve()
+    if source != Path(support.training_directory(model_type)).resolve():
+        raise ValueError("Start this lesson from the declared final production training directory.")
+    checkpoint, manifest, settings = support._validate_checkpoint(source / "last_model.pt")
+    if settings["model_type"] != model_type or int(checkpoint["epoch"]) != support.TARGET_EPOCHS[model_type]:
+        raise ValueError("The model family or completed checkpoint epoch does not match the lesson.")
+    return support, source, checkpoint, manifest, settings
+
+
+def _lesson_hash(path):
+    import hashlib
+    from pathlib import Path
+
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def inspect_training_checkpoint(model_type, source_results):
+    """Load the real final model and explain one genuine validation batch.
+
+    This performs a strict model-state load and a forward pass. It reads saved
+    optimizer/scheduler metadata without changing the checkpoint or its weights.
+    Returned values are plain numbers and lists suitable for notebook outputs.
+    """
+    import gc
+    import torch
+
+    support, source, checkpoint, manifest, settings = _lesson_source(model_type, source_results)
+    restored = support.load_notebook_case(source / "last_model.pt")
+    model, batch = restored["model"], restored["batch"]
+    with torch.no_grad():
+        if model_type == "geotransolver":
+            prediction = model(global_embedding=batch["fx"], local_embedding=batch["embeddings"],
+                               geometry=batch["geometry"], local_positions=batch["embeddings"][..., :3])
+        else:
+            prediction = model(fx=batch["fx"], embedding=batch["embeddings"])
+        sample_mse = float(torch.nn.functional.mse_loss(prediction, batch["fields"]))
+    parameters = sum(value.numel() for value in model.parameters())
+    trainable = sum(value.numel() for value in model.parameters() if value.requires_grad)
+    children = [{"name": name, "module_type": type(module).__name__,
+                 "parameters": sum(value.numel() for value in module.parameters())}
+                for name, module in model.named_children()]
+    counts = {role: len(checkpoint[role + "_case_ids"]) for role in ("train", "validation", "calibration")}
+    adam_steps = sorted({int(float(value["step"])) for value in checkpoint["optimizer"]["state"].values()})
+    scheduler = checkpoint["scheduler"]
+    info = {
+        "model_type": model_type, "model_class": type(model).__name__,
+        "checkpoint_path": str(source / "last_model.pt"), "checkpoint_sha256": _lesson_hash(source / "last_model.pt"),
+        "source_epoch": int(checkpoint["epoch"]), "strict_model_load": True,
+        "total_parameters": parameters, "trainable_parameters": trainable,
+        "parameter_storage_mib": sum(value.numel() * value.element_size() for value in model.parameters()) / 1024**2,
+        "parameter_groups": children, "model_config": dict(settings["model_config"]),
+        "batch_shapes": {name: list(value.shape) for name, value in batch.items()},
+        "batch_case_id": str(restored["case_id"]), "batch_role": "validation",
+        "inlet_velocity": float(batch["fx"].reshape(-1)[0]),
+        "first_local_features": batch["embeddings"][0, 0].detach().cpu().tolist(),
+        "first_normalized_target": batch["fields"][0, 0].detach().cpu().tolist(),
+        "first_normalized_prediction": prediction[0, 0].detach().cpu().tolist(),
+        "prediction_shape": list(prediction.shape), "sample_normalized_mse": sample_mse,
+        "target_channels": ["pressure", "wall_shear_x", "wall_shear_y", "wall_shear_z"],
+        "target_mean": checkpoint["normalization"]["mean"], "target_std": checkpoint["normalization"]["std"],
+        "split_counts": counts, "batch_size": 1, "optimizer_steps_per_epoch": counts["train"],
+        "optimizer": "AdamW", "optimizer_state_entries": len(checkpoint["optimizer"]["state"]),
+        "completed_adam_steps": adam_steps, "learning_rates": [float(group["lr"]) for group in checkpoint["optimizer"]["param_groups"]],
+        "scheduler": "update-based warmup/cosine" if model_type == "geotransolver" else "StepLR",
+        "scheduler_last_epoch": int(scheduler["last_epoch"]),
+        "scheduler_completed_updates": scheduler.get("completed_updates"),
+        "gradient_clip": float(settings["gradient_clip"]), "weight_decay": float(settings["weight_decay"]),
+        "regularization_weight": float(settings.get("lambda_reg", 0.0)),
+        "device": str(next(model.parameters()).device), "gpu": torch.cuda.get_device_name(),
+        "dtype": str(next(model.parameters()).dtype),
+        "weights_changed": False,
+    }
+    title = "GeoTransolver" if model_type == "geotransolver" else "Transolver"
+    print(f"{title}: loaded last_model.pt at completed epoch {info['source_epoch']} (strict state match).")
+    print(f"Parameters: {parameters:,} total; {trainable:,} trainable; {info['parameter_storage_mib']:.1f} MiB for parameter tensors.")
+    print(f"Architecture: {settings['model_config']['n_layers']} layers, hidden width {settings['model_config']['n_hidden']}, "
+          f"{settings['model_config']['n_head']} heads, {settings['model_config']['slice_num']} slices per head.")
+    print("Parameter groups:")
+    for child in children:
+        print(f"  {child['name']:<24} {child['parameters']:>12,}  ({child['module_type']})")
+    print(f"One real {info['batch_role']} body: case {info['batch_case_id']}; inlet velocity {info['inlet_velocity']:.6g}.")
+    for name, shape in info["batch_shapes"].items():
+        print(f"  {name:<12} {tuple(shape)}")
+    print("  prediction  " + str(tuple(info["prediction_shape"])))
+    print("First sampled location [normalized x, y, z, normal x, y, z]:")
+    print("  " + ", ".join(f"{value:.6f}" for value in info["first_local_features"]))
+    print("First normalized target [pressure, shear x, shear y, shear z]:")
+    print("  " + ", ".join(f"{value:.6f}" for value in info["first_normalized_target"]))
+    print("First normalized model prediction in the same channel order:")
+    print("  " + ", ".join(f"{value:.6f}" for value in info["first_normalized_prediction"]))
+    print(f"This single validation body's normalized four-channel MSE: {sample_mse:.6f}.")
+    print(f"One epoch: {counts['train']} training bodies = {counts['train']} optimizer steps; then {counts['validation']} validation bodies.")
+    print(f"Saved AdamW state: {info['optimizer_state_entries']} parameter tensors; completed step counter(s) {adam_steps}.")
+    print(f"Resume learning rate: {info['learning_rates'][0]:.8g}; scheduler: {info['scheduler']}; gradient clip: {info['gradient_clip']:.6g}.")
+    print("The forward pass checks loading and shapes. The five-epoch continuation below restores the saved optimizer, scheduler, and random state.")
+    del prediction, model, batch, restored, checkpoint
+    gc.collect()
+    torch.cuda.empty_cache()
+    globals().setdefault("_TRAINING_LESSON_INSPECTIONS", {})[(model_type, str(source))] = info
+    return info
+
+
+def _lesson_validate_output(support, source_checkpoint, output_dir, model_type, source_epoch):
+    import json
+    import torch
+
+    checkpoint = torch.load(output_dir / "last_model.pt", map_location="cpu", weights_only=False)
+    history = json.loads((output_dir / "learning_curve.json").read_text())
+    if (int(checkpoint["epoch"]) != source_epoch + 5 or checkpoint["history"] != history
+            or history[:source_epoch] != source_checkpoint["history"]
+            or [row["epoch"] for row in history] != list(range(1, source_epoch + 6))):
+        raise ValueError("The five actual epoch records do not match the completed output checkpoint.")
+    trainer = support._trainer(model_type)
+    settings = json.loads((output_dir / "settings.json").read_text())
+    trainer.checkpoint_compatible(checkpoint, {"settings": settings}, source_checkpoint["experiment_signature"])
+    if checkpoint["normalization"] != source_checkpoint["normalization"]:
+        raise ValueError("The continuation changed target normalization.")
+    expected_steps = (source_epoch + 5) * len(checkpoint["train_case_ids"])
+    if any(int(float(value["step"])) != expected_steps for value in checkpoint["optimizer"]["state"].values()):
+        raise ValueError("Saved AdamW counters do not include all five training epochs.")
+    rows = history[source_epoch:]
+    if any(row["train_cases"] != 458 or row["validation_cases"] != 30 or row["first_step_parameter_max_abs_update"] <= 0 for row in rows):
+        raise ValueError("The lesson must use all training and validation cases and perform real parameter updates.")
+    return checkpoint, rows
+
+
+def run_five_epoch_lesson(model_type, source_results, output_dir):
+    """Run five real epochs from the final checkpoint in a separate directory.
+
+    Completed output is reused only after checking its source hash, checkpoint,
+    full history, and optimizer counters. Training still uses the frozen external
+    backend, including its dynamic subsampling and saved random-state restore.
+    """
+    import gc
+    import json
+    import os
+    from pathlib import Path
+    import shutil
+    import subprocess
+    import sys
+
+    support, source, checkpoint, manifest, settings = _lesson_source(model_type, source_results)
+    out = Path(output_dir).expanduser().resolve()
+    demo_root = (Path(support.ROOT) / "notebook_demos").resolve()
+    if demo_root not in out.parents or source == out or source in out.parents or out in source.parents:
+        raise ValueError("Use a separate output directory inside the configured backend's notebook_demos directory.")
+    start = int(checkpoint["epoch"])
+    source_hash = _lesson_hash(source / "last_model.pt")
+    inspections = globals().get("_TRAINING_LESSON_INSPECTIONS", {})
+    info = inspections.get((model_type, str(source)))
+    if info is None or info.get("checkpoint_sha256") != source_hash:
+        info = inspect_training_checkpoint(model_type, source)
+    before = support._snapshot_production()
+    summary_path = out / "lesson_summary.json"
+    cached = summary_path.is_file()
+    try:
+        if cached:
+            summary = json.loads(summary_path.read_text())
+            if (summary.get("status") != "complete" or summary.get("model_type") != model_type
+                    or summary.get("source_checkpoint_sha256") != source_hash
+                    or summary.get("additional_epochs") != 5
+                    or summary.get("output_checkpoint_sha256") != _lesson_hash(out / "last_model.pt")):
+                raise ValueError("Existing lesson output belongs to a different source or was changed; use a new directory.")
+            final, rows = _lesson_validate_output(support, checkpoint, out, model_type, start)
+            progress = summary["batch_progress"]
+            print(f"VERIFIED RECORDED OUTPUT: five actual epochs {start + 1}–{start + 5}; this rerun performs no new updates.")
+        else:
+            if out.exists() and any(out.iterdir()):
+                raise ValueError("The five-epoch lesson requires a new empty output directory.")
+            out.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source / "best_model.pt", out / "best_model.pt")
+            demo_settings = dict(settings, epochs=start + 5, geometry_reference=str(source / "geometry_reference.json"))
+            config = out / "lesson_config.json"
+            config.write_text(json.dumps(demo_settings, indent=2, allow_nan=False) + "\n")
+            trainer = support._trainer(model_type)
+            command = [sys.executable, "-u", str(Path(trainer.__file__).resolve()), "--config", str(config),
+                       "--output-dir", str(out), "--resume", str(source / "last_model.pt"), "--segment-epochs", "5"]
+            print(f"Restoring model weights, AdamW moments, scheduler, and RNG from epoch {start}.")
+            print(f"Running five real epochs: {start + 1}–{start + 5}; 458 training steps and 30 validation cases per epoch.")
+            print("Training points are resampled; the validation sample is fixed for each body.")
+            progress = []
+            with (out / "training_stdout.log").open("w", buffering=1) as raw_log:
+                with subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                      text=True, bufsize=1) as process:
+                    for line in process.stdout:
+                        raw_log.write(line)
+                        try:
+                            record = json.loads(line)
+                        except (ValueError, TypeError):
+                            print(line.rstrip(), flush=True)
+                            continue
+                        stage = record.get("stage")
+                        if stage == "train":
+                            progress.append(record)
+                            print(f"Epoch {record['epoch']} | batch {record['step'] + 1:3d}/{record['total']} | "
+                                  f"current batch MSE {record['normalized_mse']:.6f}", flush=True)
+                        elif stage == "epoch_complete":
+                            print(f"Epoch {record['epoch']} complete | train {record['train_mse']:.6f} | "
+                                  f"validation {record['validation_mse']:.6f}", flush=True)
+                        elif stage == "training_only_normalization":
+                            print(f"Reading training targets for normalization: {record['cases']}/{record['total']} bodies.", flush=True)
+                        elif stage in ("complete", "training_complete", "resume"):
+                            print(f"Trainer: {stage}.", flush=True)
+                    if process.wait() != 0:
+                        raise RuntimeError("Five-epoch training failed; inspect training_stdout.log in the lesson output directory.")
+            final, rows = _lesson_validate_output(support, checkpoint, out, model_type, start)
+        rates = [float(group["lr"]) for group in checkpoint["optimizer"]["param_groups"]]
+        epoch_rows = []
+        for row in rows:
+            epoch_rows.append(dict(row, learning_rate_used=list(rates)))
+            rates = row["learning_rates"]
+        summary = dict(status="complete", model_type=model_type, source_epoch=start, final_epoch=start + 5,
+                       additional_epochs=5, source_checkpoint_sha256=source_hash,
+                       output_checkpoint_sha256=_lesson_hash(out / "last_model.pt"),
+                       checkpoint_path=str(out / "last_model.pt"), output_dir=str(out),
+                       load_inspection=info, epochs=epoch_rows, batch_progress=progress,
+                       source_artifacts_unchanged=True, production_artifacts_unchanged=True,
+                       evaluated_production_epoch=start, checkpoint_selection_policy="last_completed_epoch",
+                       teaching_checkpoint_used_for_reported_metrics=False)
+    finally:
+        if support._snapshot_production() != before:
+            raise RuntimeError("A protected production artifact changed during the isolated lesson.")
+    if not cached:
+        temporary = summary_path.with_suffix(".json.tmp")
+        temporary.write_text(json.dumps(summary, indent=2, allow_nan=False) + "\n")
+        os.replace(temporary, summary_path)
+    print("\nEpoch  Train MSE  Validation MSE  Learning rate used  Seconds")
+    for row in epoch_rows:
+        print(f"{row['epoch']:5d}  {row['train_mse']:.6f}   {row['validation_mse']:.6f}       "
+              f"{row['learning_rate_used'][0]:.8g}       {row['seconds']:.1f}")
+    print(f"Saved lesson checkpoint: epoch {start + 5}.")
+    print(f"Verified actual optimizer updates: {5 * info['optimizer_steps_per_epoch']:,} across five epochs.")
+    print(f"The reported accuracy and UQ results still use the original epoch-{start} production checkpoint.")
+    print("Production weights, histories, normalization, and evaluation files are unchanged.")
+    summary["recorded_output"] = cached
+    del checkpoint, final
+    gc.collect()
+    return summary
+
+
+def plot_training_lesson(lesson):
+    """Compare five measured epochs on the same zero-based MSE scale."""
+    import matplotlib.pyplot as plt
+    from matplotlib.ticker import MaxNLocator
+
+    rows = lesson["epochs"]
+    if len(rows) != 5:
+        raise ValueError("This plot requires five measured epoch records.")
+    epochs = [row["epoch"] for row in rows]
+    title = "GeoTransolver" if lesson["model_type"] == "geotransolver" else "Transolver"
+    fig, axes = plt.subplots(1, 2, figsize=(11, 3.6), constrained_layout=True)
+    upper = 1.15 * max(float(row[key]) for row in rows for key in ("train_mse", "validation_mse"))
+    for ax, key, label, color in zip(axes, ("train_mse", "validation_mse"),
+                                   ("Training: 458 bodies", "Validation: 30 bodies"), ("#2878a5", "#d27a36")):
+        values = [row[key] for row in rows]
+        ax.plot(epochs, values, "o-", color=color, linewidth=2, markersize=6)
+        ax.set(xlabel="Completed epoch", ylabel="Normalized four-channel MSE", title=label)
+        ax.set_xticks(epochs)
+        ax.set_ylim(0, upper)
+        ax.annotate(f"{values[-1]:.5f}", (epochs[-1], values[-1]), xytext=(-8, 10),
+                    textcoords="offset points", ha="right", fontsize=9, color=color)
+        ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
+        ax.ticklabel_format(axis="y", style="plain", useOffset=False)
+        ax.grid(alpha=.2)
+    fig.suptitle(f"{title}: five actual epochs after loading epoch {lesson['source_epoch']}", fontsize=13)
+    return fig
+
+
+__all__ += ['inspect_training_checkpoint', 'run_five_epoch_lesson', 'plot_training_lesson']
+
+
+# ===========================================================================
+# Readable model architecture summaries
+# ===========================================================================
+
+"""Small, notebook-friendly architecture summaries from an instantiated model.
+
+No forward pass is performed.  Counts come from the model's actual parameter
+objects, with shared parameter objects counted once in each displayed subtree.
+"""
+
+
+def format_model_summary(
+    model, *, model_label=None, max_depth=2, expand_paths=("blocks.0",)
+):
+    """Return an ASCII module tree and exact parameter counts.
+
+    ``max_depth`` counts the root as depth zero.  ``expand_paths`` additionally
+    exposes the immediate children of the named modules, making the first
+    repeated block readable without expanding every repeated block.  A row's
+    count includes its descendants; the final total deduplicates all shared
+    parameter objects across the complete model.
+    """
+    import textwrap
+
+    if not isinstance(max_depth, int) or isinstance(max_depth, bool) or max_depth < 0:
+        raise ValueError("max_depth must be a nonnegative integer")
+    if isinstance(expand_paths, str):
+        raise TypeError("expand_paths must contain module paths, not one string")
+    expand_paths = tuple(str(path) for path in expand_paths)
+
+    def ascii_text(value):
+        return str(value).encode("ascii", "backslashreplace").decode("ascii")
+
+    def unique_parameters(module):
+        return {id(parameter): parameter for parameter in module.parameters()}
+
+    def parameter_count(module):
+        return sum(parameter.numel() for parameter in unique_parameters(module).values())
+
+    def expanded(path, depth):
+        return depth < max_depth or (not path and bool(expand_paths)) or any(
+            requested == path or requested.startswith(path + ".")
+            for requested in expand_paths
+        )
+
+    name_width = 76
+    number_width = 21
+    line_width = name_width + 2 + number_width
+    rule = "=" * line_width
+
+    def row(name, count):
+        name = ascii_text(name)
+        if len(name) > name_width:
+            name = name[: name_width - 3] + "..."
+        number = f"{count:,}" if count else "--"
+        return f"{name:<{name_width}}  {number:>{number_width}}"
+
+    lines = ["[Model summary]"]
+    if model_label:
+        lines.extend(textwrap.wrap(ascii_text(model_label), width=line_width))
+    lines.extend(
+        (
+            rule,
+            f"{'Module (name: type)':<{name_width}}  {'Param # (subtree)':>{number_width}}",
+            rule,
+        )
+    )
+    lines.append(row(type(model).__name__, parameter_count(model)))
+
+    def visit(module, path, depth, prefix):
+        if not expanded(path, depth):
+            return
+        children = list(module.named_children())
+        for index, (name, child) in enumerate(children):
+            last = index == len(children) - 1
+            branch = "+-- " if last else "|-- "
+            child_path = f"{path}.{name}" if path else name
+            lines.append(
+                row(prefix + branch + f"{name}: {type(child).__name__}", parameter_count(child))
+            )
+            visit(child, child_path, depth + 1, prefix + ("    " if last else "|   "))
+
+    visit(model, "", 0, "")
+    parameters = unique_parameters(model)
+    total = sum(parameter.numel() for parameter in parameters.values())
+    trainable = sum(
+        parameter.numel() for parameter in parameters.values() if parameter.requires_grad
+    )
+    storage_mib = sum(
+        parameter.numel() * parameter.element_size() for parameter in parameters.values()
+    ) / (1024 ** 2)
+    lines.extend(
+        (
+            rule,
+            f"Total parameters:          {total:,}",
+            f"Trainable parameters:      {trainable:,}",
+            f"Non-trainable parameters:  {total - trainable:,}",
+            f"Parameter tensor storage:  {storage_mib:.2f} MiB",
+            rule,
+            "Counts include each module's children; do not add parent and child rows.",
+            "The total counts every shared parameter object once. -- means zero parameters.",
+            "Storage covers parameter tensors only; no forward pass or training-memory estimate.",
+        )
+    )
+    return "\n".join(lines)
+
+
+def print_model_summary(model, *, model_label=None, max_depth=2, expand_paths=("blocks.0",)):
+    """Print the architecture tree once, without a duplicate notebook return value."""
+    print(
+        format_model_summary(
+            model,
+            model_label=model_label,
+            max_depth=max_depth,
+            expand_paths=expand_paths,
+        )
+    )
+
+
+__all__ += ['format_model_summary', 'print_model_summary']
+
+
+# Captured from strictly loaded final checkpoints; no data access is needed to read these trees.
+_RECORDED_MODEL_SUMMARIES = {
+    'transolver': """[Model summary]
+Recorded Transolver architecture | checkpoint epoch 600 | strict load passed
+===================================================================================================
+Module (name: type)                                                               Param # (subtree)
+===================================================================================================
+Transolver                                                                                3,987,268
+|-- preprocess: _TransolverMlp                                                              135,424
+|   +-- layers: Sequential                                                                  135,424
++-- blocks: ModuleList                                                                    3,851,844
+    |-- 0: TransolverBlock                                                                  481,288
+    |   |-- ln_1: LayerNorm                                                                     512
+    |   |-- Attn: PhysicsAttentionIrregularMesh                                             217,352
+    |   +-- ln_mlp1: Sequential                                                             263,424
+    |-- 1: TransolverBlock                                                                  481,288
+    |-- 2: TransolverBlock                                                                  481,288
+    |-- 3: TransolverBlock                                                                  481,288
+    |-- 4: TransolverBlock                                                                  481,288
+    |-- 5: TransolverBlock                                                                  481,288
+    |-- 6: TransolverBlock                                                                  481,288
+    +-- 7: TransolverBlock                                                                  482,828
+===================================================================================================
+Total parameters:          3,987,268
+Trainable parameters:      3,987,268
+Non-trainable parameters:  0
+Parameter tensor storage:  15.21 MiB
+===================================================================================================
+Counts include each module's children; do not add parent and child rows.
+The total counts every shared parameter object once. -- means zero parameters.
+Storage covers parameter tensors only; no forward pass or training-memory estimate.
+""",
+    'geotransolver': """[Model summary]
+Recorded GeoTransolver architecture | checkpoint epoch 500 | strict load passed
+===================================================================================================
+Module (name: type)                                                               Param # (subtree)
+===================================================================================================
+GeoTransolver                                                                            21,660,586
+|-- context_builder: GlobalContextBuilder                                                   121,206
+|   |-- local_extractors: ModuleList                                                        109,668
+|   |-- geometry_tokenizer: ContextProjector                                                  6,281
+|   +-- global_tokenizer: ContextProjector                                                    5,257
+|-- preprocess: ModuleList                                                                  134,912
+|   +-- 0: _TransolverMlp                                                                   134,912
+|-- blocks: ModuleList                                                                   21,402,160
+|   |-- 0: GALEBlock                                                                      1,070,108
+|   |   |-- ln_1: LayerNorm                                                                     768
+|   |   |-- Attn: GALE                                                                      477,594
+|   |   |-- ln_mlp1: Sequential                                                             591,744
+|   |   |-- attn_dropout: ConcreteDropout                                                         1
+|   |   +-- ffn_dropout: ConcreteDropout                                                          1
+|   |-- 1: GALEBlock                                                                      1,070,108
+|   |-- 2: GALEBlock                                                                      1,070,108
+|   |-- 3: GALEBlock                                                                      1,070,108
+|   |-- 4: GALEBlock                                                                      1,070,108
+|   |-- 5: GALEBlock                                                                      1,070,108
+|   |-- 6: GALEBlock                                                                      1,070,108
+|   |-- 7: GALEBlock                                                                      1,070,108
+|   |-- 8: GALEBlock                                                                      1,070,108
+|   |-- 9: GALEBlock                                                                      1,070,108
+|   |-- 10: GALEBlock                                                                     1,070,108
+|   |-- 11: GALEBlock                                                                     1,070,108
+|   |-- 12: GALEBlock                                                                     1,070,108
+|   |-- 13: GALEBlock                                                                     1,070,108
+|   |-- 14: GALEBlock                                                                     1,070,108
+|   |-- 15: GALEBlock                                                                     1,070,108
+|   |-- 16: GALEBlock                                                                     1,070,108
+|   |-- 17: GALEBlock                                                                     1,070,108
+|   |-- 18: GALEBlock                                                                     1,070,108
+|   +-- 19: GALEBlock                                                                     1,070,108
++-- ln_mlp_out: ModuleList                                                                    2,308
+    +-- 0: Sequential                                                                         2,308
+===================================================================================================
+Total parameters:          21,660,586
+Trainable parameters:      21,660,586
+Non-trainable parameters:  0
+Parameter tensor storage:  82.63 MiB
+===================================================================================================
+Counts include each module's children; do not add parent and child rows.
+The total counts every shared parameter object once. -- means zero parameters.
+Storage covers parameter tensors only; no forward pass or training-memory estimate.
+""",
+}
+
+def show_saved_model_summary(model_type):
+    """Display the actual saved architecture tree without loading model data.
+
+    These records describe the production checkpoints used by the lessons:
+    Transolver epoch 600 and GeoTransolver epoch 500. Use print_model_summary
+    with a loaded model to inspect a different architecture.
+    """
+    if model_type not in _RECORDED_MODEL_SUMMARIES:
+        raise ValueError("Choose 'transolver' or 'geotransolver'.")
+    print(_RECORDED_MODEL_SUMMARIES[model_type], end="")
+
+
+__all__ += ['show_saved_model_summary']
