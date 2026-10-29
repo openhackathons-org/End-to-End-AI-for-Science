@@ -1,9 +1,23 @@
+# Keep the compatible Torch/PhysicsNeMo stack from the PhysicsNeMo container.
+# Outside the container, install PyTorch separately for your CPU/CUDA platform.
+numpy>=1.24
+matplotlib>=3.7
+matplotlib-inline
+ipython
+ipykernel
+jupyterlab
+nbformat
+nbclient
+scipy
+scikit-learn
+threadpoolctl
+tqdm
+pyvista
+zarr>=3.0
 hydra-core
 tabulate
 tensorboard
 termcolor
 torchinfo
 einops
-transformer_engine[pytorch]
 tensorstore
-zarr>=3.0
