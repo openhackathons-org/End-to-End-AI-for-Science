@@ -306,22 +306,56 @@ def _read_vtp_arrays(vtp_path):
 def plot_body_fields(vtp_path, *, field_units="kinematic", output_path="ahmed_body_fields.png"):
     """Render raw pressure, shear magnitude, and height on the original mesh.
 
-    Colors interpolate point values across the supplied VTP triangles. No
-    geometric hull or nearest-neighbor field reconstruction is substituted.
-    ``field_units`` labels the explicit preprocessing assumption; it does not
-    infer units from the array values.
+    Every original polygon is colored by the mean of its vertex values. The
+    pressure display uses its 5–95 percentile range, shear uses a 99th-percentile
+    cap, and height uses the full range. These are display settings only.
+    ``field_units`` is retained for notebook compatibility; no field conversion
+    is made here, and the source file does not verify pressure or shear units.
     """
-
-    mesh, points, triangles = _read_vtp_arrays(vtp_path)
-    units = "m²/s²" if field_units == "kinematic" else "Pa"
+    import pyvista as pv
+    path = Path(vtp_path)
+    source_sha = hashlib.sha256(path.read_bytes()).hexdigest()
+    mesh = pv.read(path)
+    points = np.asarray(mesh.points)
+    if "p" not in mesh.point_data or "wallShearStress" not in mesh.point_data:
+        raise ValueError("Original point pressure and wall shear arrays are required")
+    packed_faces = np.asarray(mesh.faces)
+    cells, offset_values, position = [], [], 0
+    while position < len(packed_faces):
+        count = int(packed_faces[position])
+        if count < 3 or position+count >= len(packed_faces):
+            raise ValueError("Malformed original VTP polygon connectivity")
+        cells.append(packed_faces[position+1:position+count+1])
+        offset_values.append((offset_values[-1] if offset_values else 0)+count)
+        position += count+1
+    connectivity = np.concatenate(cells)
+    offsets = np.asarray(offset_values, dtype=np.int64)
+    polygons, starts, counts, connectivity = _surface_polygons(points, connectivity, offsets)
     pressure = np.asarray(mesh.point_data["p"]).reshape(-1)
     shear = np.linalg.norm(np.asarray(mesh.point_data["wallShearStress"]), axis=-1)
-    return render_mesh_panels(
-        points, triangles, [pressure, shear, points[:, 2]],
-        [f"{Path(vtp_path).stem}: pressure", "Wall-shear magnitude", "Geometry: height"],
-        cmaps=["RdBu_r", "plasma", "viridis"], labels=[units, units, "m"],
-        ncols=3, figsize=(18, 5), output_path=output_path,
-    )
+    height = points[:,2]
+    limits = [tuple(np.percentile(pressure, (5,95))),
+              (0., max(float(np.percentile(shear,99)), 1e-9)),
+              (float(height.min()), float(height.max()))]
+    titles = ["CFD pressure", "Wall-shear magnitude", "Geometry: height"]
+    cmaps, labels = ["turbo", "plasma", "viridis"], ["Pressure [native units]", "Shear magnitude [native units]", "Height [m]"]
+    panels = [_surface_panel(points, polygons, starts, counts, connectivity, values,
+                            titles[index], limits[index], cmaps[index], labels[index])
+              for index, values in enumerate((pressure, shear, height))]
+    fig, audit = _render_polygon_panels(panels, shape=(1,3),
+        title="Read the CFD fields before training",
+        caption=f"Ahmed body · {path.stem} · Original surface polygons",
+        footer="Pressure: 5–95 percentile range. Shear: 99th percentile cap. Height: full range.\n"
+               "Arrow ends mark saturated colors. Pressure/shear units are unverified; original values are unchanged.",
+        output_path=output_path, show=True)
+    if hashlib.sha256(path.read_bytes()).hexdigest() != source_sha:
+        raise ValueError("The source VTP changed during rendering")
+    audit.update(source_vtp=str(path.resolve()), source_vtp_sha256=source_sha,
+        coordinates_sha256=_array_sha256(points), original_connectivity_sha256=_array_sha256(connectivity),
+        original_offsets_sha256=_array_sha256(offsets), source_units_verified=False,
+        source_field_units_assumption=field_units, source_file_unchanged=True)
+    fig.surface_render_audit = audit
+    return fig
 
 
 def plot_geometry_comparison(vtp_files, titles=None, *, output_path="ahmed_body_comparison.png"):
@@ -387,28 +421,36 @@ def plot_attention_comparison(random_weights, constructed_weights, labels):
 
 
 def plot_pressure_snapshot(points, pressure, data_label, sample_indices, *, source_vtp=None):
-    """Use original mesh interpolation for CFD; explicitly plot points for a toy.
+    """Color original CFD polygons, or explicitly plot points for a toy.
 
     ``sample_indices`` controls only the no-connectivity toy view. Actual CFD
     rendering reads the VTP faces and pressure in their original common order.
-    The 2nd/98th percentile range emphasizes spatial detail without deleting
+    The 5th/95th percentile range emphasizes spatial detail without deleting
     extreme field values from the notebook's subsequent statistics.
     """
-    limits = [tuple(np.percentile(pressure, [2, 98]))]
+    limits = [tuple(np.percentile(pressure, [5, 95]))]
     if source_vtp is not None:
 
         mesh, vertices, triangles = _read_vtp_arrays(source_vtp)
         values = np.asarray(mesh.point_data["p"]).reshape(-1)
-        return render_mesh_panels(
-            vertices, triangles, [values], [data_label], cmaps=["coolwarm"],
-            limits=limits, labels=["Pressure (source units)"], ncols=1, figsize=(12, 7),
-        )
+        limits = tuple(np.percentile(values, [5, 95]))
+        polygons, starts, counts, connectivity = _surface_polygons(
+            vertices, triangles.ravel(), np.arange(1, len(triangles)+1)*3)
+        panel = _surface_panel(vertices, polygons, starts, counts, connectivity,
+                               values, data_label, limits, "turbo", "Pressure [native units]")
+        fig, _ = _render_polygon_panels([panel], shape=(1, 1), title=data_label,
+            caption="Original surface polygons; colors average their vertex values",
+            footer="Pressure colors use the 5–95 percentile range. Arrow ends mark saturation; values are unchanged.",
+            show=True)
+        return fig
     fig = plt.figure(figsize=(12, 7))
     ax = fig.add_subplot(111, projection="3d")
     idx = np.asarray(sample_indices)
-    sc = ax.scatter(*points[idx].T, c=pressure[idx], cmap="coolwarm", s=2,
+    sc = ax.scatter(*points[idx].T, c=pressure[idx], cmap="turbo", s=2,
                     vmin=limits[0][0], vmax=limits[0][1])
-    fig.colorbar(sc, ax=ax, label="Synthetic scalar", shrink=0.55, pad=0.1)
+    fig.colorbar(sc, ax=ax, label="Synthetic scalar", shrink=0.55, pad=0.1, extend="both")
+    fig.text(.5, .015, "Colors use the 5–95 percentile range; values outside it use the endpoint colors.",
+             ha="center", fontsize=10)
     ax.set(xlabel="x (mesh units)", ylabel="y (mesh units)", zlabel="z (mesh units)", title=data_label)
     ax.set_box_aspect(np.maximum(np.ptp(points, axis=0), 1e-6))
     ax.view_init(elev=20, azim=-60)
@@ -825,61 +867,240 @@ def export_prediction_vtp(case, output_path, dataset_root=None):
     return output_path
 
 
+def _array_sha256(values):
+    return hashlib.sha256(np.ascontiguousarray(values).tobytes()).hexdigest()
+
+
+def _surface_polygons(points, connectivity, offsets):
+    """Return only supplied mesh polygons, without inferring any connections."""
+    points = np.asarray(points)
+    connectivity, offsets = np.asarray(connectivity), np.asarray(offsets)
+    if (points.ndim != 2 or points.shape[1] != 3 or not np.isfinite(points).all()
+            or connectivity.ndim != 1 or offsets.ndim != 1
+            or not np.issubdtype(connectivity.dtype, np.integer)
+            or not np.issubdtype(offsets.dtype, np.integer) or not offsets.size):
+        raise ValueError("Provide finite points (N,3) and original integer connectivity/offset arrays")
+    starts = np.r_[0, offsets[:-1]]
+    counts = offsets-starts
+    if (np.any(counts < 3) or offsets[-1] != len(connectivity) or not connectivity.size
+            or connectivity.min() < 0 or connectivity.max() >= len(points)):
+        raise ValueError("Invalid original polygon connectivity or end offsets")
+    polygons = [points[connectivity[start:end]] for start, end in zip(starts, offsets)]
+    return polygons, starts, counts, connectivity
+
+
+def _surface_panel(points, polygons, starts, counts, connectivity, values,
+                   title, limits, cmap, label):
+    values = np.asarray(values)
+    if values.shape != (len(points),) or not np.isfinite(values).all():
+        raise ValueError("Each field must contain one finite value per original vertex")
+    limits = tuple(map(float, limits))
+    if not np.isfinite(limits).all() or limits[0] > limits[1]:
+        raise ValueError("Provide increasing finite color limits")
+    if limits[0] == limits[1]:
+        limits = (limits[0]-max(abs(limits[0])*1e-6, 1e-9), limits[1]+max(abs(limits[1])*1e-6, 1e-9))
+    face_values = np.add.reduceat(values[connectivity].astype(float), starts)/counts
+    return dict(points=np.asarray(points), polygons=polygons, values=values,
+                face_values=face_values, title=title, limits=limits, cmap=cmap, label=label)
+
+
+def _render_polygon_panels(panels, *, shape, title, caption, footer,
+                           output_path=None, show=True):
+    """CPU rendering of every original polygon; averages affect color only."""
+    from matplotlib.colors import Normalize
+    from matplotlib.cm import ScalarMappable
+    from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+    shape = tuple(map(int, shape))
+    if len(shape) != 2 or min(shape) < 1 or shape[0]*shape[1] < len(panels):
+        raise ValueError("The layout must have space for every panel")
+    wide = shape[0] == 1
+    figsize = (5.75*shape[1], 7.3) if wide else (6.75*shape[1], 6.*shape[0])
+    fig = plt.figure(figsize=figsize, facecolor="white")
+    records = []
+    for index, panel in enumerate(panels):
+        points, values, face_values = panel["points"], panel["values"], panel["face_values"]
+        low, high = panel["limits"]
+        norm = Normalize(vmin=low, vmax=high, clip=True)
+        ax = fig.add_subplot(shape[0], shape[1], index+1, projection="3d")
+        collection = Poly3DCollection(panel["polygons"],
+            facecolors=plt.get_cmap(panel["cmap"])(norm(face_values)),
+            edgecolors="none", linewidths=0., antialiased=False, zsort="average")
+        ax.add_collection3d(collection)
+        minimum, maximum = points.min(axis=0), points.max(axis=0)
+        extent = np.maximum(maximum-minimum, 1e-9)
+        center = .5*(minimum+maximum)
+        for dim, setter in enumerate((ax.set_xlim, ax.set_ylim, ax.set_zlim)):
+            setter(center[dim]-.505*extent[dim], center[dim]+.505*extent[dim])
+        ax.set_box_aspect(extent)
+        ax.view_init(elev=25, azim=45)
+        ax.set_proj_type("ortho")
+        ax.set_axis_off()
+        ax.set_title(panel["title"], fontsize=17 if wide else 18,
+                     fontweight="bold", color="#142638", pad=0)
+        below, above = float(np.mean(values < low)), float(np.mean(values > high))
+        extend = "both" if below and above else "min" if below else "max" if above else "neither"
+        bar = fig.colorbar(ScalarMappable(norm=norm, cmap=panel["cmap"]), ax=ax,
+            orientation="horizontal", fraction=.045, pad=.005, shrink=.86,
+            aspect=24, extend=extend)
+        bar.ax.tick_params(labelsize=12)
+        bar.locator = MaxNLocator(nbins=4)
+        bar.update_ticks()
+        bar.set_label(panel["label"], fontsize=13, labelpad=5)
+        bar.outline.set_linewidth(.6)
+        records.append(dict(title=panel["title"], cmap=panel["cmap"],
+            display_range=[low, high], source_point_array_sha256=_array_sha256(values),
+            display_face_mean_array_sha256=_array_sha256(face_values),
+            original_min=float(values.min()), original_max=float(values.max()),
+            fraction_below_range=below, fraction_above_range=above,
+            fraction_saturated=below+above, colorbar_extend=extend,
+            original_vertices=len(points), original_polygons=len(panel["polygons"])))
+    fig.suptitle(title, fontsize=24, fontweight="bold", color="#142638", y=.975)
+    fig.text(.5, .915 if wide else .925, caption, ha="center",
+             fontsize=12 if wide else 14, color="#44576a")
+    fig.text(.5, .035 if wide else .018, footer, ha="center", va="bottom",
+             fontsize=11 if wide else 12, color="#344456", linespacing=1.6)
+    fig.subplots_adjust(left=.012, right=.988, top=.84 if wide else .895,
+        bottom=.17 if wide else .10, wspace=.035, hspace=.12 if wide else .38)
+    audit = dict(layout=list(shape), panels=records, footer=footer,
+                 rendering="Original polygons colored by mean of original vertex values; no mesh or field subsampling",
+                 geometry_unchanged=True, numerical_fields_unchanged=True)
+    if output_path is not None:
+        path = Path(output_path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(path, dpi=160, facecolor="white")
+        audit.update(path=str(path.resolve()), png_sha256=hashlib.sha256(path.read_bytes()).hexdigest())
+    if show:
+        plt.show()
+    return fig, audit
+
+
+def _surface_color_limits(targets, means, sizes, pressure_percentiles, size_color_quantile):
+    pressures = np.concatenate([np.asarray(value) for value in [*targets, *means]])
+    if pressure_percentiles is None:
+        pressure_limits = (float(pressures.min()), float(pressures.max()))
+    else:
+        lo, hi = pressure_percentiles
+        if not 0 <= lo < hi <= 100:
+            raise ValueError("Pressure percentiles must satisfy 0 <= low < high <= 100")
+        pressure_limits = tuple(np.percentile(pressures, (lo, hi)))
+    if size_color_quantile is not None and not 0 < size_color_quantile <= 1:
+        raise ValueError("size_color_quantile must be in (0,1] or None")
+    sizes = np.concatenate(sizes)
+    cap = float(sizes.max()) if size_color_quantile is None else float(np.quantile(sizes, size_color_quantile))
+    return pressure_limits, max(cap, 1e-9)
+
+
+def _surface_color_footer(pressure_percentiles, size_color_quantile, with_width):
+    pressure_text = ("full range" if pressure_percentiles is None else
+                     f"{pressure_percentiles[0]:g}–{pressure_percentiles[1]:g} percentile range")
+    size_text = "full range" if size_color_quantile is None else f"{100*size_color_quantile:g}th percentile cap"
+    quantity = "Error and half-width" if with_width else "Error"
+    return (f"Pressure: shared {pressure_text}. {quantity}: shared {size_text}.\n"
+            "Arrow ends mark saturated colors; original field values and metrics are unchanged.")
+
+
+def render_surface_comparison(points, connectivity, offsets, target, mean, *,
+                              halfwidth=None, model_label="Model", case_id=None,
+                              epoch=None, speed=None, shape=None, output_path=None,
+                              show=True, pressure_percentiles=(5, 95), size_color_quantile=.99):
+    """Render one archived CFD case and return ``(figure, audit)`` on CPU.
+
+    ``connectivity`` and exclusive ``offsets`` are the original mesh arrays.
+    Every polygon is displayed, with the mean of its original vertex values as
+    its color. Display percentiles improve contrast without changing fields or
+    metrics. Reference and prediction share pressure limits; error and interval
+    half-width share a nonnegative limit. Use ``shape=(2,2)`` for a square post.
+    """
+    points, target, mean = np.asarray(points), np.asarray(target), np.asarray(mean)
+    polygons, starts, counts, connectivity = _surface_polygons(points, connectivity, offsets)
+    if target.shape != (len(points),) or mean.shape != target.shape:
+        raise ValueError("Target and mean must have one pressure value per original vertex")
+    error = np.abs(target-mean)
+    arrays = [target, mean, error]
+    sizes = [error]
+    titles = ["CFD reference pressure", f"{model_label} pressure", "Absolute pressure error"]
+    labels = ["Pressure [native units]", "Pressure [native units]", "Error [native units]"]
+    if halfwidth is not None:
+        halfwidth = np.asarray(halfwidth)
+        if halfwidth.shape != target.shape or np.any(halfwidth < 0):
+            raise ValueError("Half-width must contain one nonnegative value per vertex")
+        arrays.append(halfwidth); sizes.append(halfwidth)
+        titles.append("90% interval half-width"); labels.append("Half-width [native units]")
+    pressure_limits, cap = _surface_color_limits([target], [mean], sizes,
+                                                pressure_percentiles, size_color_quantile)
+    limits = [pressure_limits, pressure_limits]+[(0., cap)]*(len(arrays)-2)
+    cmaps = ["turbo", "turbo", "viridis", "magma"]
+    panels = [_surface_panel(points, polygons, starts, counts, connectivity, values,
+                            panel_title, limits[index], cmaps[index], labels[index])
+              for index, (values, panel_title) in enumerate(zip(arrays, titles))]
+    caption = ["Ahmed body", model_label]
+    if case_id is not None: caption.append(f"Case {case_id}")
+    if epoch is not None: caption.append(f"Frozen epoch {int(epoch)}")
+    if speed is not None: caption.append(f"Inlet {float(speed):g} m/s")
+    fig, audit = _render_polygon_panels(panels, shape=shape or (1, len(panels)),
+        title="From CFD to AI prediction and uncertainty" if halfwidth is not None else "From CFD to AI prediction",
+        caption=" · ".join(caption),
+        footer=_surface_color_footer(pressure_percentiles, size_color_quantile, halfwidth is not None),
+        output_path=output_path, show=show)
+    audit.update(pressure_display_percentiles=list(pressure_percentiles) if pressure_percentiles is not None else None,
+        size_color_quantile=size_color_quantile, coordinates_sha256=_array_sha256(points),
+        original_connectivity_sha256=_array_sha256(connectivity),
+        original_offsets_sha256=_array_sha256(np.asarray(offsets)),
+        pressure_rmse=float(np.sqrt(np.mean(error.astype(float)**2))),
+        pressure_relative_l2=float(np.linalg.norm(error.astype(float))/max(np.linalg.norm(target.astype(float)), 1e-12)),
+        full_surface_error_max=float(error.max()),
+        calibrated_point_coverage=float(np.mean(error <= halfwidth)) if halfwidth is not None else None)
+    return fig, audit
+
+
 def plot_surface_predictions(cases, *, pressure_multiplier=None, title="Frozen checkpoint",
                              output_path=None, dataset_root=None, show=True,
-                             size_color_quantile=0.995, point_std_floor=0.):
-    """Continuous full mesh, shared scales, optional explicitly clipped error colors.
+                             size_color_quantile=.99, point_std_floor=0.,
+                             pressure_percentiles=(5, 95)):
+    """Original mesh polygons with shared vivid pressure and diagnostic scales.
 
-    Display saturation never changes fields, exported VTP arrays, or metrics.
-    The default color cap is the pooled 99.5th percentile of the shown error/
-    half-width arrays. Set size_color_quantile=None to show their full range.
+    Every original vertex enters the printed metrics. Polygon colors average
+    their vertex fields; percentile limits affect display only. Set either
+    percentile option to ``None`` to use that quantity's full range.
     """
-    columns = 4 if pressure_multiplier is not None else 3
-    pmin = min(float(min(c['target'][:,0].min(), c['mean'][:,0].min())) for c in cases)
-    pmax = max(float(max(c['target'][:,0].max(), c['mean'][:,0].max())) for c in cases)
-    size_arrays = [np.abs(c['target'][:,0]-c['mean'][:,0]) for c in cases]
-    if pressure_multiplier is not None:
-        size_arrays += [pressure_multiplier*np.maximum(c['std'][:,0],point_std_floor) for c in cases]
-    if size_color_quantile is not None and not 0 < size_color_quantile <= 1:
-        raise ValueError('size_color_quantile must be in (0,1] or None')
-    full_size_max = max(float(value.max()) for value in size_arrays)
-    scale_max = float(np.quantile(np.concatenate(size_arrays),size_color_quantile)) if size_color_quantile is not None else full_size_max
-    scale_max = max(scale_max,1e-9)
-    clipped_scale = scale_max < full_size_max
-    if clipped_scale:
-        print(f'Error/half-width color cap: shared pooled {100*size_color_quantile:g}th percentile = {scale_max:.5g}; full maximum = {full_size_max:.5g}. Values above the cap keep their original values and use the saturated top color.')
-    fig, axes = plt.subplots(len(cases), columns, figsize=(4.7*columns, 4.5*len(cases)), squeeze=False)
+    cases = list(cases)
+    if not cases:
+        raise ValueError("Provide at least one complete surface case")
+    targets, means = [c['target'][:,0] for c in cases], [c['mean'][:,0] for c in cases]
+    errors = [np.abs(target-mean) for target, mean in zip(targets, means)]
+    widths = ([pressure_multiplier*np.maximum(c['std'][:,0], point_std_floor) for c in cases]
+              if pressure_multiplier is not None else [])
+    common, cap = _surface_color_limits(targets, means, errors+widths,
+                                       pressure_percentiles, size_color_quantile)
+    panels, columns = [], 4 if widths else 3
     for row, case in enumerate(cases):
         xyz, triangles = original_surface_mesh(case, dataset_root)
+        polygons, starts, counts, connectivity = _surface_polygons(
+            xyz, triangles.ravel(), np.arange(1, len(triangles)+1)*3)
         if output_path is not None:
-            image_path=Path(output_path)
-            export_prediction_vtp(case,image_path.with_name(image_path.stem+f"_case{case['case_id']}.vtp"),dataset_root)
-        error = np.abs(case['target'][:,0]-case['mean'][:,0])
-        relative = np.linalg.norm(error.astype(float))/max(np.linalg.norm(case['target'][:,0].astype(float)), 1e-12)
-        values = [case['target'][:,0], case['mean'][:,0], error]
-        names = ["CFD pressure", "Predicted pressure", "Absolute error"]
-        if pressure_multiplier is not None:
-            values.append(pressure_multiplier*np.maximum(case['std'][:,0],point_std_floor)); names.append("90% band half-width")
-        group_label={'validation':'Shared validation/evaluation','calibration':'Calibration'}.get(case.get('split',''),case.get('label','Case'))
-        for col, (value, name) in enumerate(zip(values,names)):
-            ax=axes[row,col]
-            label='Pressure: native source units' if col<2 else ('Native units; saturated color cap' if clipped_scale else 'Native source units')
-            ax.imshow(_mesh_screenshot(xyz,triangles,value,"coolwarm" if col<2 else "magma",
-                                      (pmin,pmax) if col<2 else (0,scale_max),label))
-            ax.set_title(f"{group_label} case {case['case_id']}\n{name}",fontsize=10,pad=14); ax.axis('off')
-        text=f"case {case['case_id']}: full-mesh pressure RMSE={np.sqrt(np.mean(error.astype(float)**2)):.4g}, relative L2={relative:.2%}"
-        if pressure_multiplier is not None:
-            text+=f", calibrated point coverage={np.mean(error <= pressure_multiplier*np.maximum(case['std'][:,0],point_std_floor)):.3f}"
-        if clipped_scale:
-            text+=f"; display-saturated error vertices={100*np.mean(error>scale_max):.3f}%"
-            if pressure_multiplier is not None:
-                text+=f", half-width vertices={100*np.mean(pressure_multiplier*np.maximum(case['std'][:,0],point_std_floor)>scale_max):.3f}%"
+            image_path = Path(output_path)
+            export_prediction_vtp(case, image_path.with_name(image_path.stem+f"_case{case['case_id']}.vtp"), dataset_root)
+        arrays = [targets[row], means[row], errors[row]]+([widths[row]] if widths else [])
+        names = ["CFD pressure", "Predicted pressure", "Absolute error", "90% interval half-width"]
+        labels = ["Pressure [native units]", "Pressure [native units]", "Error [native units]", "Half-width [native units]"]
+        cmaps = ["turbo", "turbo", "viridis", "magma"]
+        for col, values in enumerate(arrays):
+            panels.append(_surface_panel(xyz, polygons, starts, counts, connectivity, values,
+                f"Case {case['case_id']} · {names[col]}", common if col < 2 else (0., cap), cmaps[col], labels[col]))
+        text = (f"Case {case['case_id']}: full-surface pressure RMSE="
+                f"{np.sqrt(np.mean(errors[row].astype(float)**2)):.5g}, "
+                f"relative L2={np.linalg.norm(errors[row].astype(float))/max(np.linalg.norm(targets[row].astype(float)), 1e-12):.2%}, "
+                f"actual maximum error={errors[row].max():.5g} native units; display cap={cap:.5g}")
+        if widths:
+            text += (f", calibrated point coverage={np.mean(errors[row] <= widths[row]):.3f}, "
+                     f"actual maximum half-width={widths[row].max():.5g}")
         print(text)
-    fig.suptitle(title+"; all original mesh vertices; shared color limits",fontsize=12,y=.98)
-    if clipped_scale:
-        fig.text(.5,.016,f'Error/half-width colors saturate above {scale_max:.4g} native units (pooled {100*size_color_quantile:g}th percentile). Full data and metrics are unchanged.',ha='center',fontsize=9)
-    fig.subplots_adjust(left=.01,right=.99,top=.88,bottom=.065,hspace=.32,wspace=.04)
-    return _finish(fig,output_path,show)
+    fig, audit = _render_polygon_panels(panels, shape=(len(cases), columns), title=title,
+        caption="Original surface polygons; colors average their original vertex values",
+        footer=_surface_color_footer(pressure_percentiles, size_color_quantile, bool(widths)),
+        output_path=output_path, show=show)
+    fig.surface_render_audit = audit
+    return fig
 
 
 def plot_measured_training(history, *, selected_epoch=None, continuation=None,
@@ -1710,90 +1931,71 @@ def run_actual_training_demo(model="geotransolver"):
     show_training_evidence(model, include_demo=True)
 
 
-def show_uq_surface_examples(model="geotransolver", case_ids=None):
-    """Render continuous fields on original mesh connectivity, or reuse that render."""
-    from IPython.display import Image, display
+def show_uq_surface_examples(model="geotransolver", case_ids=None, *, shape=None, show=True):
+    """Display audited original-mesh pressure/UQ maps without Torch or VTK.
+
+    The first default case (921) is a selected low-error illustration. Cases 51
+    and 604 retain the earlier examples so the teaching notebook shows more
+    than one level of accuracy. Aggregate metrics still use all 30 cases.
+    A ``(2,2)`` layout is useful for a post; the default is a wide four-panel row.
+    """
+    if show:
+        from IPython.display import Image, display
     if model not in _MODELS:
         raise ValueError("Unknown surface model")
     result = load_uq_results()
-    if case_ids is None:
-        ids = result["validation_evaluation_case_ids"]
-        case_ids = (ids[0], ids[len(ids)//2])
-    if not set(map(str, case_ids)) <= set(result["validation_evaluation_case_ids"]):
-        raise ValueError("Surface examples must use the declared shared validation/evaluation cases.")
+    case_ids = tuple(map(str, case_ids if case_ids is not None else ("921", "51", "604")))
+    if not set(case_ids) <= set(map(str, result["validation_evaluation_case_ids"])):
+        raise ValueError("Surface examples must use declared shared validation/evaluation cases")
+    shape = tuple(shape or (1, 4))
+    proof = json.loads((_reports()/"verification.json").read_text())["models"][model]
+    q = float(result["models"][model]["calibration"]["pressure_q"])
+    audits = []
     for case_id in case_ids:
-        image_path = _figure_cache() / f"surface_{model}_case{int(case_id)}.png"
+        suffix = "" if shape == (1, 4) else "_"+"x".join(map(str, shape))
+        image_path = _figure_cache()/f"surface_{model}_case{int(case_id)}{suffix}.png"
         metadata_path = image_path.with_suffix(".json")
-        proof = json.loads((_reports()/"verification.json").read_text())["models"][model]
-        archive_sha = proof["verified_archives"][str(case_id)]["archive_sha256"]
-        expected = dict(model=model, case_id=str(case_id), checkpoint_sha256=result["models"][model]["checkpoint_sha256"],
-                        selected_epoch=result["models"][model]["selected_epoch"], archive_sha256=archive_sha, render_schema=5)
+        expected = dict(model=model, case_id=case_id,
+            checkpoint_sha256=result["models"][model]["checkpoint_sha256"],
+            selected_epoch=result["models"][model]["selected_epoch"],
+            archive_sha256=proof["verified_archives"][case_id]["archive_sha256"],
+            render_schema=6, pressure_display_percentiles=[5, 95], size_color_quantile=.99,
+            colormaps=["turbo", "turbo", "viridis", "magma"], layout=list(shape),
+            pressure_calibration_multiplier=q, point_std_floor=1e-8,
+            display_association="Mean of original vertex field values on each original polygon")
         cached = json.loads(metadata_path.read_text()) if metadata_path.is_file() else {}
         cache_valid = (image_path.is_file() and all(cached.get(key) == value for key, value in expected.items())
-                       and cached.get("png_sha256") == hashlib.sha256(image_path.read_bytes()).hexdigest())
+            and cached.get("png_sha256") == hashlib.sha256(image_path.read_bytes()).hexdigest())
         if not cache_valid:
-            import pyvista as pv
-            root = _evaluation_root(model)
-            manifest = json.loads((root / "manifest.json").read_text())
-            if (hashlib.sha256((root/"manifest.json").read_bytes()).hexdigest() != proof["source_manifest_sha256"]
-                    or manifest["checkpoint_sha256"] != expected["checkpoint_sha256"]):
-                raise ValueError("The rendered case and compact report use different evaluation provenance.")
-            entry = next(e for e in manifest["cases"] if str(e["case_id"]) == str(case_id))
-            if entry["split"] != "validation":
-                raise ValueError("Surface examples must belong to the shared validation/evaluation partition.")
-            archive_path = (root/entry["path"]).resolve()
-            if root.resolve() not in archive_path.parents:
-                raise ValueError("Surface archives must remain inside their evaluation directory.")
-            if hashlib.sha256(archive_path.read_bytes()).hexdigest() != archive_sha:
-                raise ValueError("The surface archive changed after independent reference verification.")
-            with np.load(archive_path, allow_pickle=False) as data:
-                points = np.asarray(data["coordinates"])
-                connectivity, offsets = data["cell_connectivity"], data["cell_offsets"]
-                starts = np.r_[0, offsets[:-1]]
-                faces = np.concatenate([np.r_[int(end-start), connectivity[start:end]]
-                                        for start, end in zip(starts, offsets)])
-                target, mean, std = data["target"][:, 0], data["mean"][:, 0], data["std"][:, 0]
-                speed = float(data["stream_velocity"])
-            q = result["models"][model]["calibration"]["pressure_q"]
+            data = _load_case(model, case_id, result)
+            target, mean, std = data["target"][:,0], data["mean"][:,0], data["std"][:,0]
             halfwidth = q*np.maximum(std, 1e-8) if model == "geotransolver" else np.full_like(mean, q)
-            error = np.abs(target-mean)
-            mesh = pv.PolyData(points, faces)
-            common = (float(min(target.min(), mean.min())), float(max(target.max(), mean.max())))
-            panels = [("CFD pressure (point display)", target, common, "coolwarm"),
-                      ("Predicted mean pressure", mean, common, "coolwarm"),
-                      ("Absolute pressure error", error, (0., float(error.max())), "viridis"),
-                      ("Calibrated 90% half-width", halfwidth, (0., float(halfwidth.max())), "magma")]
-            bar_titles = ("CFD pressure [native]", "Mean pressure [native]",
-                          "Absolute error [native]", "90% half-width [native]")
-            render_panels = []
-            pv.OFF_SCREEN = True
-            plotter = pv.Plotter(shape=(1, 4), off_screen=True, window_size=(2200, 650))
-            plotter.set_background("white")
-            for index, (title, values, clim, cmap) in enumerate(panels):
-                plotter.subplot(0, index)
-                scalar_name = f"panel_{index}_field"
-                panel_mesh = mesh.copy(deep=True)
-                panel_mesh.point_data[scalar_name] = np.array(values, copy=True)
-                plotter.add_mesh(panel_mesh, scalars=scalar_name, cmap=cmap, clim=clim,
-                                 smooth_shading=False, show_edges=False, show_scalar_bar=True,
-                                 interpolate_before_map=True, ambient=.65, diffuse=.35,
-                                 scalar_bar_args=dict(title=bar_titles[index], color="black", title_font_size=13,
-                                                      label_font_size=11, n_labels=3, fmt="%.3g", vertical=False,
-                                                      position_x=.08, width=.84, position_y=.02, height=.12))
-                render_panels.append(dict(title=title, scalar_name=scalar_name,
-                    scalar_bar_title=bar_titles[index], display_range=list(map(float, clim)),
-                    source_array_sha256=hashlib.sha256(np.ascontiguousarray(values).tobytes()).hexdigest()))
-                plotter.add_text(title + f"\nCase {case_id}; supplied speed {speed:g} m/s", font_size=10, color="black", position="upper_left")
-                plotter.camera_position = "iso"
-                plotter.camera.zoom(1.05)
-            plotter.link_views()
-            plotter.screenshot(str(image_path)); plotter.close()
-            expected.update(png_sha256=hashlib.sha256(image_path.read_bytes()).hexdigest(),
-                            render_panels=render_panels,
-                            target_association="Original verified VTP PointData in original vertex order",
-                            plot_scope="Shared validation/evaluation case; original point-field display; original-cell force reference separate")
-            metadata_path.write_text(json.dumps(expected, indent=2)+"\n")
-        display(Image(filename=str(image_path)))
+            fig, audit = render_surface_comparison(data["coordinates"],
+                data["cell_connectivity"], data["cell_offsets"], target, mean,
+                halfwidth=halfwidth, model_label=_MODELS[model], case_id=case_id,
+                epoch=expected["selected_epoch"], speed=float(data["stream_velocity"]),
+                shape=shape, output_path=image_path, show=False)
+            plt.close(fig)
+            cached = dict(audit, **expected)
+            cached.update(target_association="Original verified VTP PointData in original vertex order",
+                plot_scope="Shared validation/development case; original polygon display; original-cell force reference separate")
+            metadata_path.write_text(json.dumps(cached, indent=2)+"\n")
+        print(f"{_MODELS[model]} case {case_id}: full-surface pressure RMSE={cached['pressure_rmse']:.5g}; "
+              f"relative L2={cached['pressure_relative_l2']:.2%}; "
+              f"actual maximum error={cached['full_surface_error_max']:.5g} native units; "
+              f"display error/half-width cap={cached['panels'][2]['display_range'][1]:.5g}; "
+              f"calibrated point coverage={cached['calibrated_point_coverage']:.3f}")
+        panel_audits = cached["panels"]
+        print("Display-saturated vertices: "
+              f"CFD pressure {panel_audits[0]['fraction_saturated']:.2%}, "
+              f"predicted pressure {panel_audits[1]['fraction_saturated']:.2%}, "
+              f"error {panel_audits[2]['fraction_above_range']:.2%}, "
+              f"half-width {panel_audits[3]['fraction_above_range']:.2%}. "
+              "These vertices keep their original values in every metric.")
+        if show:
+            display(Image(filename=str(image_path)))
+        audits.append(cached)
+    return audits
 
 
 def show_uq_pipeline(*, training_cases=458, calibration_cases=20,
@@ -2065,7 +2267,7 @@ def show_uq_coverage_surface(model="geotransolver", case_id=None):
     display(Image(filename=str(path)))
 
 
-__all__ = ['binary_stl_summary', 'build_geometry_reference', 'validate_geometry_reference', 'load_geometry_reference', 'geometry_scale', 'geometry_features', 'normalize_geometry', 'velocity_conditioning', 'locate_geometry_reference', 'plot_body_fields', 'plot_geometry_comparison', 'plot_field_distributions', 'plot_attention_comparison', 'plot_pressure_snapshot', 'plot_spatial_statistics', 'plot_spatial_clusters', 'plot_slice_assignments', 'plot_token_features', 'plot_token_attention', 'configure_tutorial_style', 'plot_geometry_cloud', 'plot_coordinate_snapshots', 'plot_coordinate_drift', 'plot_context_sensitivity', 'plot_gate_coefficients', 'plot_surface_data_contract', 'render_mesh_panels', 'find_ahmed_vtp', 'original_surface_mesh', 'export_prediction_vtp', 'plot_surface_predictions', 'plot_measured_training', 'capture_slice_weights', 'plot_slice_memberships', 'plot_routing_entropy', 'plot_sample_field_parity', 'VelocityOnlyDataPipe', 'load_velocity_notebook_support', 'restore_native_fields', 'resolve_case_flow', 'integrate_surface_traction', 'force_coefficient_components', 'regression_metrics', 'plot_metadata_curation_audit', 'load_normalization', 'FixedCaseDataPipe', 'field_metrics', 'plot_geo_input_flow', 'show_uq_result_source', 'load_uq_results', 'show_uq_drag', 'show_uq_summary', 'show_uq_figures', 'show_uq_figure', 'plot_uq_workflow', 'plot_toy_predictions', 'plot_toy_calibration', 'show_training_evidence', 'run_actual_training_demo', 'show_uq_surface_examples', 'show_uq_pipeline', 'show_uq_drag_intervals', 'show_uq_pointwise_diagnostics', 'show_uq_force_workflow', 'show_training_interpretation', 'show_uq_interpretation', 'show_uq_coverage_surface']
+__all__ = ['binary_stl_summary', 'build_geometry_reference', 'validate_geometry_reference', 'load_geometry_reference', 'geometry_scale', 'geometry_features', 'normalize_geometry', 'velocity_conditioning', 'locate_geometry_reference', 'plot_body_fields', 'plot_geometry_comparison', 'plot_field_distributions', 'plot_attention_comparison', 'plot_pressure_snapshot', 'plot_spatial_statistics', 'plot_spatial_clusters', 'plot_slice_assignments', 'plot_token_features', 'plot_token_attention', 'configure_tutorial_style', 'plot_geometry_cloud', 'plot_coordinate_snapshots', 'plot_coordinate_drift', 'plot_context_sensitivity', 'plot_gate_coefficients', 'plot_surface_data_contract', 'render_mesh_panels', 'find_ahmed_vtp', 'original_surface_mesh', 'export_prediction_vtp', 'plot_surface_predictions', 'render_surface_comparison', 'plot_measured_training', 'capture_slice_weights', 'plot_slice_memberships', 'plot_routing_entropy', 'plot_sample_field_parity', 'VelocityOnlyDataPipe', 'load_velocity_notebook_support', 'restore_native_fields', 'resolve_case_flow', 'integrate_surface_traction', 'force_coefficient_components', 'regression_metrics', 'plot_metadata_curation_audit', 'load_normalization', 'FixedCaseDataPipe', 'field_metrics', 'plot_geo_input_flow', 'show_uq_result_source', 'load_uq_results', 'show_uq_drag', 'show_uq_summary', 'show_uq_figures', 'show_uq_figure', 'plot_uq_workflow', 'plot_toy_predictions', 'plot_toy_calibration', 'show_training_evidence', 'run_actual_training_demo', 'show_uq_surface_examples', 'show_uq_pipeline', 'show_uq_drag_intervals', 'show_uq_pointwise_diagnostics', 'show_uq_force_workflow', 'show_training_interpretation', 'show_uq_interpretation', 'show_uq_coverage_surface']
 
 
 # ---------------------------------------------------------------------------

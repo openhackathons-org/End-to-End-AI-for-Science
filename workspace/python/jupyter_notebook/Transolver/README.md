@@ -379,3 +379,9 @@ Those backend settings require their corresponding runtime libraries. Use the [V
 - [Dropout as a Bayesian Approximation](https://arxiv.org/abs/1506.02142) and [Concrete Dropout](https://arxiv.org/abs/1705.07832)
 - [PhysicsNeMo transformer example at the source revision used for these lessons](https://github.com/NVIDIA/physicsnemo/tree/94b355108cfd10e253d3d41cacdc0c0112b078e4/examples/cfd/external_aerodynamics/transformer_models)
 - [PhysicsNeMo installation guide](https://docs.nvidia.com/physicsnemo/latest/getting-started/installation.html)
+
+### Reading the surface figures
+
+Notebooks 3, 5 and 6 use the same display rules for their surface comparisons. CFD and predicted pressure share a color scale, while error and interval half-width share a separate nonnegative scale. The displayed ranges emphasize the main spatial patterns; arrows on the colorbars mark values beyond those ranges. The notebooks explain these limits alongside the figures, and the plotting helpers retain the complete numerical fields for metrics.
+
+The first surface example is explicitly selected for its lower pressure error. Two additional cases remain available for comparison. Read the selected example together with the full development-group results rather than treating one picture as a summary of model performance.
